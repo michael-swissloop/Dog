@@ -22,6 +22,7 @@ const Dog = {
         winPositions: Array(4).fill(Array(4).fill(null)),
         atHome: Array(4).fill(4),
         blocking: Array(4).fill(null),
+        // deck:
     }),
 
     turn: {moveLimit: 1 },

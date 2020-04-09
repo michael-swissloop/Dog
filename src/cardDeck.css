@@ -1,61 +1,64 @@
-.deck
-{
-    width:50%;
-    margin: 20px auto;
-    background:dodgerblue;
-    border:solid 10px black;
-    padding: 10px;
-    border-radius:10px;
-    text-align: center;
-    color:white;
+/*$base-size: 8px;*/
+/*$font-stack: Helvetica, sans-serif;*/
+
+#root {
+    display: flex;
+    flex-flow: column wrap;
 }
 
-.card
-{
-    padding: 10px;
-    border: solid 1px #808080;
-    background-color: white;
-    display: inline-block;
-    border-radius: 10px;
-    font-size: 14pt;
-    text-align: center;
-    color:black;
-    margin: 3px;
+.deck {
+    display: flex;
+    flex-flow: row wrap;
 }
 
-.btn
-{
-    background:white;
-    padding: 10px 20px;
-    border-radius:30px;
-    margin: 10px;
-    display:inline-block;
+.card {
+    display: flex;
+    width: 48px;
+    height: 80px;
+    background-color: #FFF;
+    border-radius: 8px;
+    border: 1px solid black;
+    margin: 16px;
+    padding: 4px;
 }
 
-.card .value{
-    font-size:15pt;
-    font-family: sans-serif;
+.card-black {
+    color: black;
 }
 
-.card .suit
-{
-    background-image: url('card.png');
-    height: 100px;
-    width: 90px;
+.card-red {
+    color: red;
 }
 
-.card .diamonds
-{
-    background-position-y: 100px;
+.card-value {
+    font-size: 16px;
 }
 
-.card .hearts
-{
-    background-position-x: 90px;
+.card-suit {
+.font-size: 8px;
 }
 
-.card .clubs
-{
-    background-position-x:90px;
-    background-position-y:100px;
+.card-tl {
+    display: flex;
+    flex-grow: 1;
+    flex-flow: column nowrap;
+    align-items: flex-start;
+}
+
+.card-br {
+    display: flex;
+    flex-grow: 1;
+    flex-flow: column nowrap;
+    justify-content: flex-start;
+    transform:rotate(-180deg);
+}
+
+input[type=button] {
+    padding: 8px 16px;
+    margin: 16px;
+    border-radius: 8px;
+    background-color: red;
+    border: 1px solid white;
+    color: white;
+    text-transform: uppercase;
 }
