@@ -2,6 +2,8 @@
  * Copyright 2020 Michael Rogenmoser
  */
 
+import getNewCardDeck from './cardDeck';
+
 function GetCards(G,ctx) {
 
 }
@@ -14,8 +16,16 @@ function PlayCard(G,ctx) {
 
 }
 
+function StartPawn(G, currentPlayer) {
+    if (G.positions[currentPlayer][9] != -1) {
+        G.atHome[G.positions[currentPlayer][9]] ++;
+    }
+    G.positions[currentPlayer][9] = currentPlayer;
+    G.atHome[currentPlayer] --;
+}
+
 function isVictory(winPositions, currentPlayer) {
-    if (winPositions == Array(4).fill(currentPlayer)){
+    if (winPositions === Array(4).fill(currentPlayer)){
         return true;
     } else {
         return false;
@@ -40,17 +50,33 @@ function movePawn(G, currentPlayer, pawnLocation, distance) {
 const Dog = {
     name: "Dog",
 
-    setup: () => {
+    setup: (ctx, setupData) => {
         let positions = Array.from({length:4},()=>((Array.from({length:16},()=>(-1)))));
         for (let i = 0; i<4; i++) {
             positions[i][9] = i;
         }
+        let deck = getNewCardDeck(2);
+        deck = ctx.random.Shuffle(deck);
+
+        let players = {'0':{myCards:[]}, '1':{myCards:[]}, '2':{myCards:[]}, '3':{myCards:[]}};
+        for (let i = 0; i<4; i++) {
+            for (let j=0; j<6; j++) {
+                players[i].myCards.push(deck.pop());
+            }
+        }
+
         return{
-        positions: positions,
-        winPositions: Array(4).fill(Array(4).fill(null)),
-        atHome: Array(4).fill(3),
-        blocking: Array(4).fill(null),
-        centerCard: {},}
+            positions: positions,
+            winPositions: Array(4).fill(Array(4).fill(null)),
+            atHome: Array(4).fill(3),
+            blocking: Array(4).fill(null).map(()=>(true)),
+            centerCard: {},
+            secret: {
+                deck: deck,
+                spentCards: [],
+            },
+            players: players
+        }
         // deck;
     },
 
@@ -62,6 +88,10 @@ const Dog = {
             // G.atHome[ctx.currentPlayer]--;
             // console.log(id)
             // console.log(ctx.currentPlayer)
+            if (id==="A" || id==="K") {
+                StartPawn(G, ctx.currentPlayer);
+                return
+            }
             playerSearch:
             for (let i = 0; i < 4; i++) {
                 for (let j = 0; j < 16; j++) {
@@ -82,7 +112,14 @@ const Dog = {
                 }
             }
         },
+        selectCard(G, ctx, id) {
+
+        }
     },
+
+    // playerView: (G, ctx, playerID) => {
+    //     return StripSecrets(G, playerID);
+    // },
 
     // phases: {
     //     startRound: {

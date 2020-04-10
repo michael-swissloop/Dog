@@ -1,11 +1,28 @@
 import React from 'react';
-import './cardDeck.css';
 
 // class Card extends React.Component {
 //     render() {
 //         return <Card suit={this.props.suit} value={this.props.val} />
 //     }
 // }
+
+export default function getNewCardDeck(size = 1) {
+    let deck = [];
+    for (let i = 0; i < size; i++) {
+        const suits = ["spade", "heart", "club", "diamond"];
+        const values = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+
+        suits.forEach(function(suitItem, suitIndex) {
+            values.forEach(function(valueItem, valueIndex) {
+                deck.push({suit:suitItem, value:valueItem});
+            });
+        });
+        deck.push({value:"Joker"});
+        deck.push({value:"Joker"});
+    }
+    console.log(deck)
+    return deck;
+}
 
 // class CardDeck {
 //     constructor() {
@@ -42,6 +59,7 @@ import './cardDeck.css';
 //         });
 //         this.deck.push({value:"Joker"});
 //         this.deck.push({value:"Joker"});
+//         console.log(this.deck);
 //     }
 // }
 
@@ -96,55 +114,3 @@ import './cardDeck.css';
 //         );
 //     }
 // };
-
-const Card = (props) => {
-    if (props.suit === "heart" || props.suit === "♦︎" || props.suit === "diamond" || props.suit === "♥") {
-        let suit = props.suit;
-        if(props.suit === "heart"){ suit = "♥︎"};
-        if(props.suit === "diamond"){ suit = "♦︎"};
-        return (
-            <div className="card card-red" style={props.selected ? {backgroundColor: 'lightblue'} : {}}>
-                <div className="card-tl">
-                    <div className="card-value">
-                        {props.value}
-                    </div>
-                    <div className="card-suit">
-                        {suit}
-                    </div>
-                </div>
-                <div className="card-br">
-                    <div className="card-value">
-                        {props.value}
-                    </div>
-                    <div className="card-suit">
-                        {suit}
-                    </div>
-                </div>
-            </div>);
-    } else {
-        let suit = props.suit;
-        if(props.suit === "spade"){ suit = "♠︎"};
-        if(props.suit === "club"){ suit = "♣︎"};
-        return (
-            <div className="card card-black"  style={props.selected ? {backgroundColor: 'lightblue'} : {}}>
-                <div className="card-tl">
-                    <div className="card-value">
-                        {props.value}
-                    </div>
-                    <div className="card-suit">
-                        {suit}
-                    </div>
-                </div>
-            <div className="card-br">
-                <div className="card-value">
-                    {props.value}
-                </div>
-                <div className="card-suit">
-                    {suit}
-                </div>
-            </div>
-        </div>);
-    }
-};
-
-export default Card;

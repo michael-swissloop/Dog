@@ -8,7 +8,7 @@ import './board.css';
 import BoardSection from "./boardSection";
 // import CardDeck from "./cardDeck";
 // import MyCards from "./myCards";
-import Card from "./cardDeck";
+import Card from "./card";
 const params = require('./params.json');
 
 class Board extends React.Component {
@@ -55,14 +55,7 @@ class Board extends React.Component {
             orientingID3 = '3';
         }
 
-        let myCards = [
-            {suit: "heart", value:"3"},
-            {suit: "club", value:"J"},
-            {suit: "club", value:"5"},
-            {suit: "diamond", value:8, selected:true},
-            {suit: "spade", value:"A", selected:false},
-            // {suit: "", value:"Joker", selected:false},
-        ];
+        let myCards = this.props.G.players[orientingID0].myCards;
 
         let items = [];
 
