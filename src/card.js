@@ -2,7 +2,17 @@ import React from "react";
 import './cardDeck.css';
 
 const Card = (props) => {
-    if (props.suit === "heart" || props.suit === "♦︎" || props.suit === "diamond" || props.suit === "♥") {
+    if(props.value === "Joker") {
+        return (
+            <div className="card card-black" style={props.selected ? {backgroundColor: 'lightblue'} : {}}>
+                <div className="card-joker">
+                    <div style={{fontSize: "32px"}}>
+                        {props.value}
+                    </div>
+                </div>
+            </div>
+        );
+    } else if (props.suit === "heart" || props.suit === "♦︎" || props.suit === "diamond" || props.suit === "♥") {
         let suit = props.suit;
         if(props.suit === "heart"){ suit = "♥︎"};
         if(props.suit === "diamond"){ suit = "♦︎"};
@@ -24,7 +34,8 @@ const Card = (props) => {
                         {suit}
                     </div>
                 </div>
-            </div>);
+            </div>
+        );
     } else {
         let suit = props.suit;
         if(props.suit === "spade"){ suit = "♠︎"};
@@ -47,7 +58,8 @@ const Card = (props) => {
                         {suit}
                     </div>
                 </div>
-            </div>);
+            </div>
+        );
     }
 };
 

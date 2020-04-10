@@ -45,6 +45,19 @@
     align-items: flex-start;
 }
 
+.card-joker {
+    position: absolute;
+    top: 33%;
+    left: 12%;
+    /*display: flex;*/
+    /*flex-grow: 1;*/
+    /*flex-flow: column nowrap;*/
+    /*justify-content: center;*/
+    /*align-items: center;*/
+    /*flex-grow: 1;*/
+    transform:rotate(70deg);
+}
+
 .card-br {
     display: flex;
     flex-grow: 1;
