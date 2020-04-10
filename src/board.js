@@ -6,8 +6,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import './board.css';
 import BoardSection from "./boardSection";
-import Deck from "./cardDeck";
-import MyCards from "./myCards";
+// import CardDeck from "./cardDeck";
+// import MyCards from "./myCards";
 import Card from "./cardDeck";
 const params = require('./params.json');
 
@@ -35,6 +35,9 @@ class Board extends React.Component {
 
     render() {
 
+        // let myDeck = CardDeck();
+        // console.log(myDeck.deck);
+
         let orientingID0
         let orientingID1
         let orientingID2
@@ -53,11 +56,12 @@ class Board extends React.Component {
         }
 
         let myCards = [
-            {suit: "♥", value:"3", selected:false},
-            {suit: "♣︎", value:"J", selected:false},
-            {suit: "♣︎", value:"5", selected:false},
-            {suit: "♦", value:8, selected:true},
-            {suit: "♠", value:"A", selected:false},
+            {suit: "heart", value:"3"},
+            {suit: "club", value:"J"},
+            {suit: "club", value:"5"},
+            {suit: "diamond", value:8, selected:true},
+            {suit: "spade", value:"A", selected:false},
+            // {suit: "", value:"Joker", selected:false},
         ];
 
         let items = [];
@@ -107,7 +111,7 @@ class Board extends React.Component {
                 />
                 {items}
                 <div style={{position: "absolute", left: (10.5*params.positionDelta-30)+"px", top: (9.5*params.positionDelta-30)+"px"}}>
-                    <Card suit={"♠"} value="7" />
+                    <Card suit={this.props.G.centerCard.suit} value={this.props.G.centerCard.value} />
                 </div>
             </div>
 

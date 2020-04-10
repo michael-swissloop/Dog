@@ -1,5 +1,5 @@
 {
-  "playerColors": ["orange","red","blue","green"],
+  "playerColors": {"0":"orange", "1":"red", "2":"blue", "3":"green", "-1":"white"},
   "circleSize": 20,
   "positionDelta": 30,
   "positions": [
