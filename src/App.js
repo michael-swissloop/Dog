@@ -4,24 +4,38 @@ import Dog from "./game";
 import Board from "./board";
 import { Local } from "boardgame.io/multiplayer"
 
-// const DogClient = Client({
-//     game: Dog,
-//     numPlayers: 4,
-//     board: Board,
-//     // multiplayer: Local(),
-// });
-//
-// const App = () => (
-//     <div>
-//         {/*<DogClient playerID={'0'} />*/}
-//         <DogClient playerID={'0'} />
-//     </div>
-// )
-
-const App = Client({
+const DogClient = Client({
     game: Dog,
     numPlayers: 4,
     board: Board,
+    // multiplayer: Local(),
 });
+
+const App = () => (
+    <div>
+        <div>
+            Player 0
+            <DogClient playerID={'0'} />
+        </div>
+        <div style={{transform: "translate(800px, 0px)"}}>
+            Player 1
+            <DogClient playerID={'1'} />
+        </div>
+        <div style={{transform: "translate(0px, 800px)"}}>
+            Player 2
+            <DogClient playerID={'2'} />
+        </div>
+        <div style={{transform: "translate(800px, 800px)"}}>
+            Player 3
+            <DogClient playerID={'3'} />
+        </div>
+    </div>
+)
+
+// const App = Client({
+//     game: Dog,
+//     numPlayers: 4,
+//     board: Board,
+// });
 
 export default App;

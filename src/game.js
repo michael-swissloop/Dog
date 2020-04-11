@@ -17,15 +17,15 @@ function PlayCard(G,ctx) {
 }
 
 function StartPawn(G, currentPlayer) {
-    if (G.positions[currentPlayer][9] != -1) {
-        G.atHome[G.positions[currentPlayer][9]] ++;
+    if (G.positions[parseInt(currentPlayer)][9] != -1) {
+        G.atHome[G.positions[parseInt(currentPlayer)][9]] ++;
     }
-    G.positions[currentPlayer][9] = currentPlayer;
-    G.atHome[currentPlayer] --;
+    G.positions[parseInt(currentPlayer)][9] = parseInt(currentPlayer);
+    G.atHome[parseInt(currentPlayer)] --;
 }
 
 function isVictory(winPositions, currentPlayer) {
-    if (winPositions === Array(4).fill(currentPlayer)){
+    if (winPositions === Array(4).fill(parseInt(currentPlayer))){
         return true;
     } else {
         return false;
@@ -43,7 +43,7 @@ function movePawn(G, currentPlayer, pawnLocation, distance) {
         if (G.positions[newPos[0]][newPos[1]] < 4 && G.positions[newPos[0]][newPos[1]] >= 0) {
             G.atHome[G.positions[newPos[0]][newPos[1]]]++;
         }
-        G.positions[newPos[0]][newPos[1]] = currentPlayer;
+        G.positions[newPos[0]][newPos[1]] = parseInt(currentPlayer);
     }
 }
 
@@ -63,11 +63,12 @@ const Dog = {
             for (let j=0; j<6; j++) {
                 players[i].myCards.push(deck.pop());
             }
+            players[i].cardToBePlayed = null;
         }
 
         return{
             positions: positions,
-            winPositions: Array(4).fill(Array(4).fill(null)),
+            winPositions: Array(4).fill(Array(4).fill(-1)),
             atHome: Array(4).fill(3),
             blocking: Array(4).fill(null).map(()=>(true)),
             centerCard: {},
@@ -82,12 +83,52 @@ const Dog = {
 
     turn: {moveLimit: 1 },
 
+    // phases: {
+    //     exchangeCards: {
+    //         start: true,
+    //     },
+    //     normalPlay: {
+    //
+    //     }
+    // },
+    //
+    //
+    // stages: {
+    //     selectCard: {
+    //         moves: {
+    //             pickCard: {
+    //                 move: (G, ctx, id) => {
+    //
+    //                 },
+    //                 undoable: true,
+    //             }
+    //         }
+    //     },
+    //     selectPlayer: {
+    //         moves: {
+    //             pickPlayer: {
+    //                 move: (G, ctx, section, position) => {
+    //
+    //                 },
+    //                 undoable: true,
+    //             }
+    //         }
+    //     },
+    //     selectMovement: {
+    //         moves: {
+    //             pickTargetSpot: {
+    //                 move: (G, ctx, section, position) => {
+    //
+    //                 },
+    //                 undoable: false,
+    //             }
+    //         }
+    //     },
+    // },
+
+
     moves: {
         playCard(G, ctx, id) {
-            // G.positions[ctx.currentPlayer][id] = ctx.currentPlayer;
-            // G.atHome[ctx.currentPlayer]--;
-            // console.log(id)
-            // console.log(ctx.currentPlayer)
             if (id==="A" || id==="K") {
                 StartPawn(G, ctx.currentPlayer);
                 return
@@ -95,17 +136,9 @@ const Dog = {
             playerSearch:
             for (let i = 0; i < 4; i++) {
                 for (let j = 0; j < 16; j++) {
-                    // let newPos = [(Math.floor(i+(j+id)/16))%4, (j+id)%16]
-                    // console.log(newPos)
                     if (G.positions[i][j] === parseInt(ctx.currentPlayer)) {
-                        // console.log(newPos);
-                        // G.positions[i][j] = null;
-                        // if (G.positions[newPos[0]][newPos[1]] != null) {
-                        //     G.atHome[G.positions[newPos[0]][newPos[1]]]++;
-                        // }
-                        // G.positions[newPos[0]][newPos[1]] = ctx.currentPlayer;
-                        console.log([i,j]);
-                        movePawn(G, parseInt(ctx.currentPlayer), [i,j],id);
+
+                        movePawn(G, parseInt(ctx.currentPlayer), [i,j],parseInt(id));
                         break playerSearch;
                     }
 
@@ -113,8 +146,12 @@ const Dog = {
             }
         },
         selectCard(G, ctx, id) {
-
+            G.players[ctx.currentPlayer].cardToBePlayed = id;
         }
+    },
+
+    cardToBePlayedUpdate: (G, ctx, playerID, cardID) => {
+        G.players[playerID].cardToBePlayed = cardID;
     },
 
     // playerView: (G, ctx, playerID) => {

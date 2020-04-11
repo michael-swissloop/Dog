@@ -17,26 +17,28 @@
     text-align: center;
 }
 
-td {
-    text-align: center;
-    font-weight: bold;
-    font-size: 25px;
-    color: #555;
-    width: 50px;
-    height: 50px;
-    line-height: 50px;
-    border: 3px solid #aaa;
-    background: #fff;
-}
+/*td {*/
+/*    text-align: center;*/
+/*    font-weight: bold;*/
+/*    font-size: 25px;*/
+/*    color: #555;*/
+/*    width: 50px;*/
+/*    height: 50px;*/
+/*    line-height: 50px;*/
+/*    border: 3px solid #aaa;*/
+/*    background: #fff;*/
+/*}*/
 
-td.active {
-    cursor: pointer;
-    background: #eeffe9;
-}
+/*td.active {*/
+/*    cursor: pointer;*/
+/*    background: #eeffe9;*/
+/*}*/
 
-td.active:hover {
-    background: #eeffff;
-}
+/*td.active:hover {*/
+/*    background: #eeffff;*/
+/*}*/
+
+
 
 .circle {
     width: 30px;
@@ -44,4 +46,41 @@ td.active:hover {
     border-radius: 50%;
     background: white;
     border: 3px solid saddlebrown;
+    color: white;
+    text-align: center;
+    position: absolute;
+}
+
+.circle-green {
+    background: green;
+}
+.circle-blue {
+    background: blue;
+}
+.circle-red {
+    background: red;
+}
+.circle-orange {
+    background: orange;
+}
+
+.circle:hover {
+    border-style: dotted;
+}
+
+.circle-green:hover {
+    background: lightgreen;
+    color: black;
+}
+.circle-blue:hover {
+    background: lightblue;
+    color: black;
+}
+.circle-red:hover {
+    background: coral;
+    color: black;
+}
+.circle-orange:hover {
+    background: yellow;
+    color: black;
 }

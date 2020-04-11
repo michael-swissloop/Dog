@@ -4,7 +4,7 @@ import './cardDeck.css';
 const Card = (props) => {
     if(props.value === "Joker") {
         return (
-            <div className="card card-black" style={props.selected ? {backgroundColor: 'lightblue'} : {}}>
+            <div className="card card-black" style={props.selected ? {backgroundColor: 'lightblue'} : {}} key={props.id}>
                 <div className="card-joker">
                     <div style={{fontSize: "32px"}}>
                         {props.value}
@@ -17,7 +17,7 @@ const Card = (props) => {
         if(props.suit === "heart"){ suit = "♥︎"};
         if(props.suit === "diamond"){ suit = "♦︎"};
         return (
-            <div className="card card-red" style={props.selected ? {backgroundColor: 'lightblue'} : {}}>
+            <div className="card card-red" style={props.selected ? {backgroundColor: 'lightblue'} : {}} key={props.id}>
                 <div className="card-tl">
                     <div className="card-value">
                         {props.value}
@@ -41,7 +41,7 @@ const Card = (props) => {
         if(props.suit === "spade"){ suit = "♠︎"};
         if(props.suit === "club"){ suit = "♣︎"};
         return (
-            <div className="card card-black"  style={props.selected ? {backgroundColor: 'lightblue'} : {}}>
+            <div className="card card-black"  style={props.selected ? {backgroundColor: 'lightblue'} : {}} key={props.id}>
                 <div className="card-tl">
                     <div className="card-value">
                         {props.value}
