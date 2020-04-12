@@ -39,20 +39,53 @@ class Board extends React.Component {
         isMultiplayer: PropTypes.bool,
     };
 
-    onClickCard(id) {
-        this.cardToBePlayed = id;
-        this.setState({...this.cardToBePlayed});
+    isActive(id) {
+        if (!this.props.isActive) return false;
+        return true;
     }
 
-    onClickPosition(sectionId, positionId) {
-        console.log("testing: "+sectionId+" "+positionId);
-        if (sectionId===this.myPlayerID && positionId===-1) {
+    attemptStart() {
+        if (!this.isActive(this.myPlayerID)){return false}
+        if (this.props.G.blocking[this.myPlayerID]) { return false; }
+        if (!["A", "K", "Joker"].includes(this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value)) {return false;}
+
+        this.props.moves.playCard(this.cardToBePlayed, {sectionID: this.myPlayerID, positionID: -1});
+        this.cardToBePlayed = -1;
+        return true;
+    }
+
+    onClickCard(id) {
+
+        if (this.props.ctx.phase === "ExchangeCards") {
+            // console.log("in exchange")
+            this.props.moves.selectExchange(this.myPlayerID, id);
+            return;
+        }
+        this.cardToBePlayed = id;
+
+        this.setState({...this.cardToBePlayed});
+        // console.log(this.checkForPossibleMoves());
+    }
+
+    onClickPosition(sectionID, positionID) {
+        console.log("testing: "+sectionID+" "+positionID);
+        if (sectionID===this.myPlayerID && positionID===-1) {
             console.log("at home players")
+            if (this.cardToBePlayed >=0 && this.cardToBePlayed < this.props.G.players[this.myPlayerID].myCards.length) {
+                // console.log(this.cardToBePlayed);
+                this.attemptStart();
+            }
         }
-        if (this.props.G.positions[sectionId][positionId] === this.myPlayerID) {
+        if (this.props.G.positions[sectionID][positionID] === this.myPlayerID) {
             console.log("selected my own player")
+            console.log("PlayerID: "+this.myPlayerID);
+            console.log("card: "+this.cardToBePlayed);
+            if (this.cardToBePlayed >=0 && this.cardToBePlayed < this.props.G.players[this.myPlayerID].myCards.length) {
+                console.log(this.cardToBePlayed);
+                this.props.moves.playCard(this.cardToBePlayed, {sectionID: sectionID, positionID: positionID})
+            }
         }
-        if (positionId-20>=0) {
+        if (positionID-20>=0) {
             console.log("are we winning?")
         }
     }
@@ -113,12 +146,6 @@ class Board extends React.Component {
         )
     }
 
-    // isActive(id) {
-    //     if (!this.props.isActive) return false;
-    //     if (this.props.G.cells[id] !== null) return false;
-    //     return true;
-    // }
-
     render() {
 
 
@@ -137,43 +164,71 @@ class Board extends React.Component {
             // this.orientingID3 = '3';
         }
 
-        let myCards = this.props.G.players[this.myPlayerID].myCards;
+        this.myCards = this.props.G.players[this.myPlayerID].myCards;
 
-        for (let i = 0; i < myCards.length; i++) {
-            myCards[i].selected = false;
-            if (this.props.G.players[this.myPlayerID].cardToBePlayed === i) {
-                myCards[i].selected = true;
-            }
-        }
+        // for (let i = 0; i < myCards.length; i++) {
+        //     myCards[i].selected = false;
+        //     if (this.props.G.players[this.myPlayerID].cardToBePlayed === i) {
+        //         myCards[i].selected = true;
+        //     }
+        // }
 
         let items = [];
 
-        for (let i = 0; i < myCards.length; i++) {
+        for (let i = 0; i < this.myCards.length; i++) {
             items.push(
-                <div key={410+i} style={{position: "absolute", left: ((11.5)*params.positionDelta+(60*(i-myCards.length/2)))+"px", top: 20*params.positionDelta+"px"}} onClick={this.onClickCard.bind(this, i)}>
-                    <Card suit={myCards[i].suit} value={myCards[i].value} selected={this.cardToBePlayed === i} id={400+i}/>
+                <div
+                    key={410+i}
+                    style={{
+                        position: "absolute",
+                        left: ((11.5)*params.positionDelta+(60*(i-this.myCards.length/2)))+"px",
+                        top: 20*params.positionDelta+"px"
+                    }}
+                    onClick={this.onClickCard.bind(this, i)}
+                >
+                    <Card suit={this.myCards[i].suit} value={this.myCards[i].value} selected={this.cardToBePlayed === i} id={400+i}/>
                 </div>
             )
         }
 
-        // console.log(parseInt(this.props.G.players[this.orientingID0].cardToBePlayed) === 3);
+        let cannotPlay = <button
+            onClick={() => this.props.moves.doNothing()}
+            style={{
+                position: "absolute",
+                left: ((18)*params.positionDelta)+"px",
+                top: 18.5*params.positionDelta+"px"
+            }}
+        >Cannot Play</button>
 
+        // console.log(parseInt(this.props.G.players[this.orientingID0].cardToBePlayed) === 3);
+        // if (this.props.G.players[this.myPlayerID].myCards.length === 0 && this.isActive(this.myPlayerID)) {
+        //     this.props.moves.doNothing();
+        // }
 
         return(
             <div>
                 {this.getBoardSection(this.myPlayerID, [8.8*params.positionDelta,14.8*params.positionDelta], 0)}
-                {this.getBoardSection((parseInt(this.myPlayerID)+1)%4, [16.7*params.positionDelta,13*params.positionDelta], -90)}
-                {this.getBoardSection((parseInt(this.myPlayerID)+2)%4, [14.9*params.positionDelta,5.2*params.positionDelta], 180)}
-                {this.getBoardSection((parseInt(this.myPlayerID)+3)%4, [7*params.positionDelta,7*params.positionDelta], 90)}
+                {this.getBoardSection((this.myPlayerID+1)%4, [16.7*params.positionDelta,13*params.positionDelta], -90)}
+                {this.getBoardSection((this.myPlayerID+2)%4, [14.9*params.positionDelta,5.2*params.positionDelta], 180)}
+                {this.getBoardSection((this.myPlayerID+3)%4, [7*params.positionDelta,7*params.positionDelta], 90)}
 
                 {this.props.G.players[this.myPlayerID].myCards.map((value, index) => {
-                    return <div key={410+index} style={{position: "absolute", left: ((11.5)*params.positionDelta+(60*(index-myCards.length/2)))+"px", top: 20*params.positionDelta+"px"}} onClick={this.onClickCard.bind(this, index)}>
+                    return <div
+                        key={410+index}
+                        style={{
+                            position: "absolute",
+                            left: ((11.5)*params.positionDelta+(60*(index-this.myCards.length/2)))+"px",
+                            top: 20*params.positionDelta+"px"
+                        }}
+                        onClick={this.onClickCard.bind(this, index)}
+                    >
                         <Card suit={value.suit} value={value.value} selected={this.cardToBePlayed === index} id={400+index}/>
                     </div>
                 })}
                 <div style={{position: "absolute", left: (11.5*params.positionDelta-30)+"px", top: (9.5*params.positionDelta-30)+"px"}}>
                     <Card id={904} suit={this.props.G.centerCard.suit} value={this.props.G.centerCard.value} />
                 </div>
+                {cannotPlay}
             </div>
 
         );

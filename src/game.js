@@ -3,21 +3,12 @@
  */
 
 import getNewCardDeck from './cardDeck';
+// import {Game, PlayerView} from "boardgame.io/core";
+import {ActivePlayers, INVALID_MOVE} from "boardgame.io/core";
 
-function GetCards(G,ctx) {
-
-}
-
-function ExchangeCards(G,ctx) {
-
-}
-
-function PlayCard(G,ctx) {
-
-}
 
 function StartPawn(G, currentPlayer) {
-    if (G.positions[parseInt(currentPlayer)][9] != -1) {
+    if (G.positions[parseInt(currentPlayer)][9] !== -1) {
         G.atHome[G.positions[parseInt(currentPlayer)][9]] ++;
     }
     G.positions[parseInt(currentPlayer)][9] = parseInt(currentPlayer);
@@ -30,6 +21,26 @@ function isVictory(winPositions, currentPlayer) {
     } else {
         return false;
     }
+}
+
+function checkForPossibleMoves(G, ctx) {
+    // Check if starting is an option
+    let handContainsStart = false;
+    for (let i = 0; i < G.players[ctx.currentPlayer].myCards.length; i++) {
+        if (G.players[ctx.currentPlayer].myCards[i].value === "Joker" ||
+            G.players[ctx.currentPlayer].myCards[i].value === "K" ||
+            G.players[ctx.currentPlayer].myCards[i].value === "A"
+        ) {
+            console.log(G.players[ctx.currentPlayer].myCards[i].value)
+            handContainsStart=true}
+    }
+    if(G.atHome[ctx.currentPlayer] !== 0 &&
+        G.positions[ctx.currentPlayer][9] !== ctx.currentPlayer &&
+        handContainsStart
+    ) {return true;}
+    // Check if Moving is an option
+
+    return false
 }
 
 function movePawn(G, currentPlayer, pawnLocation, distance) {
@@ -47,14 +58,62 @@ function movePawn(G, currentPlayer, pawnLocation, distance) {
     }
 }
 
+export function playCard(G, ctx, cardID, pawnPosition) {
+    // console.log("currPlayer: "+ctx.currentPlayer);
+    // console.log("cardID: "+cardID);
+    // console.log("pawnPosition: "+pawnPosition.sectionID + " " + pawnPosition.positionID);
+    // console.log("card value: "+G.players[ctx.currentPlayer].myCards[cardID].value);
+    if(
+        pawnPosition.sectionID === parseInt(ctx.currentPlayer) &&
+        pawnPosition.positionID === -1 &&
+        G.positions[ctx.currentPlayer][9] !== ctx.currentPlayer &&
+        (
+            G.players[ctx.currentPlayer].myCards[cardID].value === "A" ||
+            G.players[ctx.currentPlayer].myCards[cardID].value === "K" ||
+            G.players[ctx.currentPlayer].myCards[cardID].value === "Joker"
+        )
+    ) {
+        StartPawn(G, ctx.currentPlayer);
+    } else {
+        console.log("something went wrong")
+        return INVALID_MOVE;
+    }
+    G.centerCard = G.players[ctx.currentPlayer].myCards[cardID];
+    G.secret.spentCards.push(G.players[ctx.currentPlayer].myCards.splice(cardID,1)[0]);
+}
+
+export function selectExchange(G, ctx, playerID, cardID) {
+    if (G.secret.newCard[(parseInt(playerID)+2)%4] !== null) {
+        return INVALID_MOVE;
+    } else {
+        G.secret.newCard[(parseInt(playerID)+2)%4] = G.players[playerID].myCards.splice(cardID, 1)[0];
+    }
+}
+
+export function doNothing(G, ctx) {
+    // check if moves can be made, otherwise throw away cards
+    if (!checkForPossibleMoves(G, ctx)) {
+        G.secret.spentCards = G.secret.spentCards.concat(G.players[ctx.currentPlayer].myCards);
+        G.players[ctx.currentPlayer].myCards = [];
+    }
+    if (G.players[ctx.currentPlayer].myCards.length === 0) {
+        console.log("attempted endTurn");
+    }
+    if (G.players[ctx.currentPlayer].myCards.length === 0) {
+        return;
+    } else {
+        return INVALID_MOVE;
+    }
+}
+
 const Dog = {
     name: "Dog",
 
     setup: (ctx, setupData) => {
         let positions = Array.from({length:4},()=>((Array.from({length:16},()=>(-1)))));
-        for (let i = 0; i<4; i++) {
-            positions[i][9] = i;
-        }
+        // for (let i = 0; i<4; i++) {
+        //     positions[i][9] = i;
+        // }
         let deck = getNewCardDeck(2);
         deck = ctx.random.Shuffle(deck);
 
@@ -63,113 +122,121 @@ const Dog = {
             for (let j=0; j<6; j++) {
                 players[i].myCards.push(deck.pop());
             }
-            players[i].cardToBePlayed = null;
         }
 
         return{
             positions: positions,
             winPositions: Array(4).fill(Array(4).fill(-1)),
-            atHome: Array(4).fill(3),
-            blocking: Array(4).fill(null).map(()=>(true)),
+            atHome: Array(4).fill(4),
+            blocking: Array(4).fill(null).map(()=>(false)),
             centerCard: {},
             secret: {
                 deck: deck,
                 spentCards: [],
+                newCard: {'0':null, '1':null, '2':null,'3':null},
             },
-            players: players
+            players: players,
+            roundCounter: 0,
         }
         // deck;
     },
 
-    turn: {moveLimit: 1 },
+    events: {
+        endTurn: true,
+    },
 
-    // phases: {
-    //     exchangeCards: {
-    //         start: true,
-    //     },
-    //     normalPlay: {
-    //
-    //     }
-    // },
-    //
-    //
-    // stages: {
-    //     selectCard: {
-    //         moves: {
-    //             pickCard: {
-    //                 move: (G, ctx, id) => {
-    //
-    //                 },
-    //                 undoable: true,
-    //             }
-    //         }
-    //     },
-    //     selectPlayer: {
-    //         moves: {
-    //             pickPlayer: {
-    //                 move: (G, ctx, section, position) => {
-    //
-    //                 },
-    //                 undoable: true,
-    //             }
-    //         }
-    //     },
-    //     selectMovement: {
-    //         moves: {
-    //             pickTargetSpot: {
-    //                 move: (G, ctx, section, position) => {
-    //
-    //                 },
-    //                 undoable: false,
-    //             }
-    //         }
-    //     },
-    // },
-
-
-    moves: {
-        playCard(G, ctx, id) {
-            if (id==="A" || id==="K") {
-                StartPawn(G, ctx.currentPlayer);
-                return
-            }
-            playerSearch:
-            for (let i = 0; i < 4; i++) {
-                for (let j = 0; j < 16; j++) {
-                    if (G.positions[i][j] === parseInt(ctx.currentPlayer)) {
-
-                        movePawn(G, parseInt(ctx.currentPlayer), [i,j],parseInt(id));
-                        break playerSearch;
-                    }
-
+    phases: {
+        // Exchange Cards with Partner
+        ExchangeCards: {
+            moves: { selectExchange },
+            next: 'PlayCards',
+            onEnd: (G, ctx) => {
+                for (let i = 0; i < ctx.numPlayers; i++) {
+                    G.players[i].myCards.push(G.secret.newCard[i]);
                 }
+                G.secret.newCard = {'0':null, '1':null, '2':null,'3':null}
+
+            },
+            start: true,
+            turn: {
+                activePlayers: ActivePlayers.ALL_ONCE,
+                onMove: (_,ctx) => {
+                    if (ctx.activePlayers === null) {
+                        ctx.events.endPhase();
+                    }
+                }
+
             }
         },
-        selectCard(G, ctx, id) {
-            G.players[ctx.currentPlayer].cardToBePlayed = id;
+        PlayCards: {
+            moves: { playCard, doNothing },
+            next: "ExchangeCards",
+            turn: {
+                moveLimit: 1,
+                order: {
+                    first: (G) => (G.roundCounter)%4,
+                    next: (G, ctx) => {
+                        let nextPlayer = (ctx.playOrderPos + 1) % 4
+                        for (let i = 0; i < ctx.numPlayers; i++) {
+                            if (G.players[nextPlayer].myCards.length === 0) {
+                                nextPlayer = (nextPlayer + 1) % 4
+                            } else {
+                                break;
+                            }
+                        }
+                        return nextPlayer
+                    }
+                },
+                onBegin: (G, ctx) => {
+                    console.log("in onBegin")
+                    // Check if there are still cards, if not end phase
+                    let check = true;
+                    for (let i = 0; i < 4; i++) {
+                        if (G.players[i].myCards.length !== 0) {check = false;}
+                    }
+                    if (check) {
+                        ctx.events.endPhase();
+                    }
+                },
+                // endIf: (G, ctx) => {
+                //     return G.players[ctx.currentPlayer].myCards.length === 0;
+                // }
+            },
+            onEnd: (G, ctx) => {
+                G.roundCounter++;
+            }
+
         }
     },
 
-    cardToBePlayedUpdate: (G, ctx, playerID, cardID) => {
-        G.players[playerID].cardToBePlayed = cardID;
-    },
-
-    // playerView: (G, ctx, playerID) => {
-    //     return StripSecrets(G, playerID);
+    // turn: {
+    //     moveLimit: 1,
     // },
 
-    // phases: {
-    //     startRound: {
-    //         moves: {ExchangeCards},
-    //     },
-    //     play: {
-    //         moves: {PlayCard},
-    //     },
+    // moves: {
+    //     // playCardWithClick(G, ctx, id) {
+    //     //     if (id==="A" || id==="K") {
+    //     //         StartPawn(G, ctx.currentPlayer);
+    //     //         return
+    //     //     }
+    //     //     playerSearch:
+    //     //     for (let i = 0; i < 4; i++) {
+    //     //         for (let j = 0; j < 16; j++) {
+    //     //             if (G.positions[i][j] === parseInt(ctx.currentPlayer)) {
+    //     //
+    //     //                 movePawn(G, parseInt(ctx.currentPlayer), [i,j],parseInt(id));
+    //     //                 break playerSearch;
+    //     //             }
+    //     //
+    //     //         }
+    //     //     }
+    //     // },
+    //     playCard,
     // },
 
     // playerView: (G, ctx, playerID) => {
-    //     return null;
-    // }
+    //     return PlayerView.STRIP_SECRETS(G, playerID);
+    // },
 
     endIf: (G, ctx) => {
         if (isVictory(G.winPositions,ctx.currentPlayer)) {

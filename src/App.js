@@ -8,7 +8,8 @@ const DogClient = Client({
     game: Dog,
     numPlayers: 4,
     board: Board,
-    // multiplayer: Local(),
+    multiplayer: Local(),
+    // debug: false,
 });
 
 const App = () => (
