@@ -2,7 +2,7 @@
  * Copyright 2020 Michael Rogenmoser
  */
 
-import getNewCardDeck from './cardDeck';
+import { getNewCardDeck, shuffleDeck } from './cardDeck';
 // import {Game, PlayerView} from "boardgame.io/core";
 import {ActivePlayers, INVALID_MOVE} from "boardgame.io/core";
 
@@ -34,12 +34,14 @@ function checkForPossibleMoves(G, ctx) {
             console.log(G.players[ctx.currentPlayer].myCards[i].value)
             handContainsStart=true}
     }
+    // console.log(G.positions[ctx.currentPlayer][9])
+    // console.log(ctx.currentPlayer)
+    // console.log(G.positions[ctx.currentPlayer][9] !== ctx.currentPlayer)
     if(G.atHome[ctx.currentPlayer] !== 0 &&
-        G.positions[ctx.currentPlayer][9] !== ctx.currentPlayer &&
+        G.positions[ctx.currentPlayer][9] !== parseInt(ctx.currentPlayer) &&
         handContainsStart
     ) {return true;}
     // Check if Moving is an option
-
     return false
 }
 
@@ -115,14 +117,15 @@ const Dog = {
         //     positions[i][9] = i;
         // }
         let deck = getNewCardDeck(2);
-        deck = ctx.random.Shuffle(deck);
+        deck = shuffleDeck(deck);
+        // deck = ctx.random.Shuffle(deck);
 
         let players = {'0':{myCards:[]}, '1':{myCards:[]}, '2':{myCards:[]}, '3':{myCards:[]}};
-        for (let i = 0; i<4; i++) {
-            for (let j=0; j<6; j++) {
-                players[i].myCards.push(deck.pop());
-            }
-        }
+        // for (let i = 0; i<4; i++) {
+        //     for (let j=0; j<6; j++) {
+        //         players[i].myCards.push(deck.pop());
+        //     }
+        // }
 
         return{
             positions: positions,
@@ -150,6 +153,19 @@ const Dog = {
         ExchangeCards: {
             moves: { selectExchange },
             next: 'PlayCards',
+            onBegin: (G, ctx) => {
+                // Reshuffle complete deck at start of phase
+                G.secret.deck = shuffleDeck(G.secret.deck.concat(G.secret.spentCards))
+                G.secret.spentCards = [];
+
+                //distribute cards
+                let numCards = 6-(G.roundCounter%5)
+                for (let i = 0; i<4; i++) {
+                    for (let j=0; j<numCards; j++) {
+                        G.players[i].myCards.push(G.secret.deck.pop());
+                    }
+                }
+            },
             onEnd: (G, ctx) => {
                 for (let i = 0; i < ctx.numPlayers; i++) {
                     G.players[i].myCards.push(G.secret.newCard[i]);

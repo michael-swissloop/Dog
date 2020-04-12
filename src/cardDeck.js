@@ -1,12 +1,5 @@
-import React from 'react';
 
-// class Card extends React.Component {
-//     render() {
-//         return <Card suit={this.props.suit} value={this.props.val} />
-//     }
-// }
-
-export default function getNewCardDeck(size = 1) {
+export function getNewCardDeck(size = 1) {
     let deck = [];
     for (let i = 0; i < size; i++) {
         const suits = ["spade", "heart", "club", "diamond"];
@@ -24,93 +17,18 @@ export default function getNewCardDeck(size = 1) {
     return deck;
 }
 
-// class CardDeck {
-//     constructor() {
-//         this.deck = [];
-//         this.resetDeck();
-//         // return this.deck;
-//     }
-//
-//     shuffleCards(deck) {
-//         console.log('shuffling deck');
-//         let counter = deck.length;
-//         let t;
-//         let i;
-//
-//         while (counter) {
-//             i = Math.floor(Math.random() * counter-- );
-//             t = deck[counter];
-//             deck[counter] = deck[i];
-//             deck[i] = t;
-//         }
-//         return deck;
-//     }
-//
-//     resetDeck() {
-//         const suits = ["spade", "heart", "club", "diamond"];
-//         const values = ["A", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
-//         const special = ["Joker", "Joker"];
-//
-//         this.deck = [];
-//         suits.forEach(function(suitItem, suitIndex) {
-//             values.forEach(function(valueItem, valueIndex) {
-//                 this.deck.push({suit:suitItem, value:valueIndex});
-//             });
-//         });
-//         this.deck.push({value:"Joker"});
-//         this.deck.push({value:"Joker"});
-//         console.log(this.deck);
-//     }
-// }
+export function shuffleDeck(deck) {
 
-// class Deck extends React.Component {
-//     // constructor(props) {
-//     //     super(props);
-//     //     this.state = {};
-//     // }
-//
-//
-//
-//     shuffleCards(deck) {
-//         console.log('shuffling deck');
-//         let counter = deck.length;
-//         let t;
-//         let i;
-//
-//         while (counter) {
-//             i = Math.floor(Math.random() * counter-- );
-//             t = deck[counter];
-//             deck[counter] = deck[i];
-//             deck[i] = t;
-//         }
-//         return deck;
-//     }
-//
-//     render() {
-//         const suits = ["♠︎", "♥︎", "♣︎", "♦︎"];
-//         const values = ["A", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
-//         let cardDeck = [];
-//         let card = [];
-//
-//         for (let x = 0; x < suits.length; x++) {
-//             for (let y = 0; y < values.length; y++) {
-//                 card = {suit: suits[x], val: values[y]};
-//                 cardDeck.push(card);
-//             }
-//         };
-//
-//         this.shuffleCards(cardDeck);
-//
-//
-//         return (
-//             <div>
-//                 <button onClick={this.shuffleCards(cardDeck)}>Shuffle</button>
-//                 <div className="deck">
-//                     {cardDeck.map(function(card) {
-//                         return <Card suit={card.suit} value={card.val} />
-//                     })}
-//                 </div>
-//             </div>
-//         );
-//     }
-// };
+    let clone = deck.slice(0);
+    let srcIndex = deck.length;
+    let dstIndex = 0;
+    let shuffled = new Array(srcIndex);
+
+    while (srcIndex) {
+        let randIndex = (srcIndex * Math.random()) | 0;
+        shuffled[dstIndex++] = clone[randIndex];
+        clone[randIndex] = clone[--srcIndex];
+    }
+
+    return shuffled;
+}
