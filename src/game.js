@@ -5,7 +5,7 @@
 import { getNewCardDeck, shuffleDeck } from './cardDeck';
 // import {Game, PlayerView} from "boardgame.io/core";
 import {ActivePlayers, INVALID_MOVE} from "boardgame.io/core";
-
+import { checkForPossibleMoves } from "./validMoves"
 
 function StartPawn(G, currentPlayer) {
     if (G.positions[parseInt(currentPlayer)][9] !== -1) {
@@ -21,28 +21,6 @@ function isVictory(winPositions, currentPlayer) {
     } else {
         return false;
     }
-}
-
-function checkForPossibleMoves(G, ctx) {
-    // Check if starting is an option
-    let handContainsStart = false;
-    for (let i = 0; i < G.players[ctx.currentPlayer].myCards.length; i++) {
-        if (G.players[ctx.currentPlayer].myCards[i].value === "Joker" ||
-            G.players[ctx.currentPlayer].myCards[i].value === "K" ||
-            G.players[ctx.currentPlayer].myCards[i].value === "A"
-        ) {
-            console.log(G.players[ctx.currentPlayer].myCards[i].value)
-            handContainsStart=true}
-    }
-    // console.log(G.positions[ctx.currentPlayer][9])
-    // console.log(ctx.currentPlayer)
-    // console.log(G.positions[ctx.currentPlayer][9] !== ctx.currentPlayer)
-    if(G.atHome[ctx.currentPlayer] !== 0 &&
-        G.positions[ctx.currentPlayer][9] !== parseInt(ctx.currentPlayer) &&
-        handContainsStart
-    ) {return true;}
-    // Check if Moving is an option
-    return false
 }
 
 function movePawn(G, currentPlayer, pawnLocation, distance) {
@@ -94,7 +72,7 @@ export function selectExchange(G, ctx, playerID, cardID) {
 
 export function doNothing(G, ctx) {
     // check if moves can be made, otherwise throw away cards
-    if (!checkForPossibleMoves(G, ctx)) {
+    if (!checkForPossibleMoves(G, ctx.currentPlayer)) {
         G.secret.spentCards = G.secret.spentCards.concat(G.players[ctx.currentPlayer].myCards);
         G.players[ctx.currentPlayer].myCards = [];
     }
@@ -214,9 +192,6 @@ const Dog = {
                         ctx.events.endPhase();
                     }
                 },
-                // endIf: (G, ctx) => {
-                //     return G.players[ctx.currentPlayer].myCards.length === 0;
-                // }
             },
             onEnd: (G, ctx) => {
                 G.roundCounter++;

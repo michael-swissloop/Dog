@@ -9,6 +9,7 @@ import './board.css';
 // import CardDeck from "./cardDeck";
 // import MyCards from "./myCards";
 import Card from "./card";
+import { checkForPossibleMoves } from "./validMoves";
 const params = require('./params.json');
 
 function Circle(props) {
@@ -39,6 +40,11 @@ class Board extends React.Component {
         isMultiplayer: PropTypes.bool,
     };
 
+    constructor(props) {
+        super(props);
+        this.cardToBePlayed = -1;
+    }
+
     isActive(id) {
         if (!this.props.isActive) return false;
         return true;
@@ -59,6 +65,8 @@ class Board extends React.Component {
         if (this.props.ctx.phase === "ExchangeCards") {
             // console.log("in exchange")
             this.props.moves.selectExchange(this.myPlayerID, id);
+            this.instructions = null;
+            this.setState({...this.instructions})
             return;
         }
         this.cardToBePlayed = id;
@@ -191,6 +199,28 @@ class Board extends React.Component {
             )
         }
 
+        // this.instructions = "myText"
+
+        if (this.props.ctx.phase === "ExchangeCards") {
+            if (this.props.G.secret.newCard[(this.myPlayerID+2)%4] === null) {
+                this.instructions = "Select Card to Exchange";
+            } else {
+                this.instructions = "Please wait for other Players"
+            }
+        } else {
+            if (this.isActive(this.myPlayerID)) {
+                if (!checkForPossibleMoves(this.props.G, this.myPlayerID)) {
+                    this.instructions = "No moves available - Press 'Cannot Play'"
+                } else if (this.cardToBePlayed === -1) {
+                    this.instructions = "Select Card to Play"
+                } else {
+                    this.instructions = "Select Player or Start"
+                }
+            } else {
+                this.instructions = "Please wait for other Players"
+            }
+        }
+
         let cannotPlay = <button
             onClick={() => this.props.moves.doNothing()}
             style={{
@@ -199,6 +229,14 @@ class Board extends React.Component {
                 top: 18.5*params.positionDelta+"px"
             }}
         >Cannot Play</button>
+
+        let instructionBox = <div
+            style={{
+                position: "absolute",
+                left: ((15.5)*params.positionDelta)+"px",
+                top: 17*params.positionDelta+"px"
+            }}
+        >{this.instructions}</div>
 
         // console.log(parseInt(this.props.G.players[this.orientingID0].cardToBePlayed) === 3);
         // if (this.props.G.players[this.myPlayerID].myCards.length === 0 && this.isActive(this.myPlayerID)) {
@@ -229,6 +267,7 @@ class Board extends React.Component {
                     <Card id={904} suit={this.props.G.centerCard.suit} value={this.props.G.centerCard.value} />
                 </div>
                 {cannotPlay}
+                {instructionBox}
             </div>
 
         );
