@@ -24,14 +24,14 @@ function isVictory(winPositions, currentPlayer) {
 }
 
 function movePawn(G, currentPlayer, pawnLocation, distance) {
-    let newPos = [(Math.floor(pawnLocation[0]+(pawnLocation[1]+distance)/16))%4, (pawnLocation[1]+distance)%16]
+    let newPos = [(Math.floor(pawnLocation.sectionID+(pawnLocation.positionID+distance)/16))%4, (pawnLocation.positionID+distance)%16]
     console.log(distance);
     console.log(pawnLocation);
     console.log(newPos);
-    if (G.positions[pawnLocation[0]][pawnLocation[1]] === parseInt(currentPlayer)) {
+    if (G.positions[pawnLocation.sectionID][pawnLocation.positionID] === parseInt(currentPlayer)) {
         // console.log(newPos);
-        G.positions[pawnLocation[0]][pawnLocation[1]] = -1;
-        if (G.positions[newPos[0]][newPos[1]] < 4 && G.positions[newPos[0]][newPos[1]] >= 0) {
+        G.positions[pawnLocation.sectionID][pawnLocation.positionID] = -1;
+        if (G.positions[newPos[0]][newPos[1]] < 6 && G.positions[newPos[0]][newPos[1]] >= 0) {
             G.atHome[G.positions[newPos[0]][newPos[1]]]++;
         }
         G.positions[newPos[0]][newPos[1]] = parseInt(currentPlayer);
@@ -54,6 +54,11 @@ export function playCard(G, ctx, cardID, pawnPosition) {
         )
     ) {
         StartPawn(G, ctx.currentPlayer);
+    } else if (
+        pawnPosition.positionID !== -1 &&
+        !isNaN(G.players[ctx.currentPlayer].myCards[cardID].value)
+    ) {
+        movePawn(G, ctx.currentPlayer, pawnPosition, parseInt(G.players[ctx.currentPlayer].myCards[cardID].value))
     } else {
         console.log("something went wrong")
         return INVALID_MOVE;
@@ -63,10 +68,10 @@ export function playCard(G, ctx, cardID, pawnPosition) {
 }
 
 export function selectExchange(G, ctx, playerID, cardID) {
-    if (G.secret.newCard[(parseInt(playerID)+2)%4] !== null) {
+    if (G.secret.newCard[(parseInt(playerID)+2)%ctx.numPlayers] !== null) {
         return INVALID_MOVE;
     } else {
-        G.secret.newCard[(parseInt(playerID)+2)%4] = G.players[playerID].myCards.splice(cardID, 1)[0];
+        G.secret.newCard[(parseInt(playerID)+2)%ctx.numPlayers] = G.players[playerID].myCards.splice(cardID, 1)[0];
     }
 }
 
@@ -90,26 +95,24 @@ const Dog = {
     name: "Dog",
 
     setup: (ctx, setupData) => {
-        let positions = Array.from({length:4},()=>((Array.from({length:16},()=>(-1)))));
-        // for (let i = 0; i<4; i++) {
+        let positions = Array.from({length:(2*Math.ceil(ctx.numPlayers/2))},()=>((Array.from({length:16},()=>(-1)))));
+        // for (let i = 0; i<ctx.numPlayers; i++) {
         //     positions[i][9] = i;
         // }
         let deck = getNewCardDeck(2);
         deck = shuffleDeck(deck);
         // deck = ctx.random.Shuffle(deck);
 
-        let players = {'0':{myCards:[]}, '1':{myCards:[]}, '2':{myCards:[]}, '3':{myCards:[]}};
-        // for (let i = 0; i<4; i++) {
-        //     for (let j=0; j<6; j++) {
-        //         players[i].myCards.push(deck.pop());
-        //     }
-        // }
+        let players = {}
+        for (let i = 0; i < ctx.numPlayers; i++) {
+            players[i] = {myCards:[]}
+        }
 
         return{
             positions: positions,
-            winPositions: Array(4).fill(Array(4).fill(-1)),
-            atHome: Array(4).fill(4),
-            blocking: Array(4).fill(null).map(()=>(false)),
+            winPositions: Array((2*Math.ceil(ctx.numPlayers/2))).fill(Array(4).fill(-1)),
+            atHome: Array(ctx.numPlayers).fill(4),
+            blocking: Array(ctx.numPlayers).fill(null).map(()=>(false)),
             centerCard: {},
             secret: {
                 deck: deck,
@@ -138,7 +141,7 @@ const Dog = {
 
                 //distribute cards
                 let numCards = 6-(G.roundCounter%5)
-                for (let i = 0; i<4; i++) {
+                for (let i = 0; i<ctx.numPlayers; i++) {
                     for (let j=0; j<numCards; j++) {
                         G.players[i].myCards.push(G.secret.deck.pop());
                     }
@@ -168,12 +171,12 @@ const Dog = {
             turn: {
                 moveLimit: 1,
                 order: {
-                    first: (G) => (G.roundCounter)%4,
+                    first: (G, ctx) => (G.roundCounter)%ctx.numPlayers,
                     next: (G, ctx) => {
-                        let nextPlayer = (ctx.playOrderPos + 1) % 4
+                        let nextPlayer = (ctx.playOrderPos + 1) % ctx.numPlayers
                         for (let i = 0; i < ctx.numPlayers; i++) {
                             if (G.players[nextPlayer].myCards.length === 0) {
-                                nextPlayer = (nextPlayer + 1) % 4
+                                nextPlayer = (nextPlayer + 1) % ctx.numPlayers
                             } else {
                                 break;
                             }
@@ -185,7 +188,7 @@ const Dog = {
                     console.log("in onBegin")
                     // Check if there are still cards, if not end phase
                     let check = true;
-                    for (let i = 0; i < 4; i++) {
+                    for (let i = 0; i < ctx.numPlayers; i++) {
                         if (G.players[i].myCards.length !== 0) {check = false;}
                     }
                     if (check) {

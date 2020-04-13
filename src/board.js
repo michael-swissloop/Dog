@@ -91,6 +91,7 @@ class Board extends React.Component {
             if (this.cardToBePlayed >=0 && this.cardToBePlayed < this.props.G.players[this.myPlayerID].myCards.length) {
                 console.log(this.cardToBePlayed);
                 this.props.moves.playCard(this.cardToBePlayed, {sectionID: sectionID, positionID: positionID})
+                this.cardToBePlayed = -1;
             }
         }
         if (positionID-20>=0) {
@@ -147,7 +148,7 @@ class Board extends React.Component {
         }
 
         return (
-            <div style={{position: "absolute", left: screenPos[0]+"px", top: screenPos[1], transform: `rotate(`+ orientation + `deg)`}}>
+            <div key={1000+playerID} style={{position: "absolute", left: screenPos[0]+"px", top: screenPos[1], transform: `rotate(`+ orientation + `deg)`}}>
                 {items}
                 {/*<h2 style={{position: "absolute", left: 200}}>{this.props.playerID}</h2>*/}
             </div>
@@ -202,7 +203,7 @@ class Board extends React.Component {
         // this.instructions = "myText"
 
         if (this.props.ctx.phase === "ExchangeCards") {
-            if (this.props.G.secret.newCard[(this.myPlayerID+2)%4] === null) {
+            if (this.props.G.secret.newCard[(this.myPlayerID+(this.props.ctx.numPlayers/2))%this.props.ctx.numPlayers] === null) {
                 this.instructions = "Select Card to Exchange";
             } else {
                 this.instructions = "Please wait for other Players"
@@ -243,12 +244,23 @@ class Board extends React.Component {
         //     this.props.moves.doNothing();
         // }
 
+        let boardSections = [];
+        for (let i = 0; i < this.props.ctx.numPlayers; i++) {
+            boardSections.push(
+                this.getBoardSection(
+                    (this.myPlayerID+i)%this.props.ctx.numPlayers,
+                    [
+                        params.boardOffsets[(2*Math.ceil(this.props.ctx.numPlayers/2))][i][0]*params.positionDelta,
+                        params.boardOffsets[(2*Math.ceil(this.props.ctx.numPlayers/2))][i][1]*params.positionDelta
+                    ],
+                    params.boardOffsets[(2*Math.ceil(this.props.ctx.numPlayers/2))][i][2]
+                )
+            )
+        }
+
         return(
             <div>
-                {this.getBoardSection(this.myPlayerID, [8.8*params.positionDelta,14.8*params.positionDelta], 0)}
-                {this.getBoardSection((this.myPlayerID+1)%4, [16.7*params.positionDelta,13*params.positionDelta], -90)}
-                {this.getBoardSection((this.myPlayerID+2)%4, [14.9*params.positionDelta,5.2*params.positionDelta], 180)}
-                {this.getBoardSection((this.myPlayerID+3)%4, [7*params.positionDelta,7*params.positionDelta], 90)}
+                {boardSections}
 
                 {this.props.G.players[this.myPlayerID].myCards.map((value, index) => {
                     return <div
