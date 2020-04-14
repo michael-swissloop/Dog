@@ -5,7 +5,7 @@
 import { getNewCardDeck, shuffleDeck } from './cardDeck';
 // import {Game, PlayerView} from "boardgame.io/core";
 import {ActivePlayers, INVALID_MOVE} from "boardgame.io/core";
-import { checkForPossibleMoves } from "./validMoves"
+import { checkForPossibleMoves, checkForBlock } from "./validMoves"
 
 function StartPawn(G, currentPlayer) {
     if (G.positions[parseInt(currentPlayer)][9] !== -1) {
@@ -13,6 +13,7 @@ function StartPawn(G, currentPlayer) {
     }
     G.positions[parseInt(currentPlayer)][9] = parseInt(currentPlayer);
     G.atHome[parseInt(currentPlayer)] --;
+    G.blocking[parseInt(currentPlayer)] = true;
 }
 
 function isVictory(winPositions, currentPlayer) {
@@ -28,6 +29,9 @@ function movePawn(G, currentPlayer, pawnLocation, distance) {
     console.log(distance);
     console.log(pawnLocation);
     console.log(newPos);
+    if (!checkForBlock(G, pawnLocation.sectionID, pawnLocation.positionID, distance)) {
+        return false;
+    }
     if (G.positions[pawnLocation.sectionID][pawnLocation.positionID] === parseInt(currentPlayer)) {
         // console.log(newPos);
         G.positions[pawnLocation.sectionID][pawnLocation.positionID] = -1;
@@ -36,6 +40,10 @@ function movePawn(G, currentPlayer, pawnLocation, distance) {
         }
         G.positions[newPos[0]][newPos[1]] = parseInt(currentPlayer);
     }
+    if (pawnLocation.sectionID === parseInt(currentPlayer) && pawnLocation.positionID === 9) {
+        G.blocking[parseInt(currentPlayer)] = false;
+    }
+    return true;
 }
 
 export function playCard(G, ctx, cardID, pawnPosition) {
@@ -54,12 +62,22 @@ export function playCard(G, ctx, cardID, pawnPosition) {
         )
     ) {
         StartPawn(G, ctx.currentPlayer);
+    }  else if (
+        pawnPosition.positionID !== -1 &&
+        G.players[ctx.currentPlayer].myCards[cardID].value === "Q"
+    ) {
+        if(!movePawn(G, ctx.currentPlayer, pawnPosition, 12)) {return INVALID_MOVE}
+    } else if (
+        pawnPosition.positionID !== -1 &&
+        G.players[ctx.currentPlayer].myCards[cardID].value === "K"
+    ) {
+        if(!movePawn(G, ctx.currentPlayer, pawnPosition, 13)) {return INVALID_MOVE}
     } else if (
         pawnPosition.positionID !== -1 &&
         !isNaN(G.players[ctx.currentPlayer].myCards[cardID].value)
     ) {
-        movePawn(G, ctx.currentPlayer, pawnPosition, parseInt(G.players[ctx.currentPlayer].myCards[cardID].value))
-    } else {
+        if(!movePawn(G, ctx.currentPlayer, pawnPosition, parseInt(G.players[ctx.currentPlayer].myCards[cardID].value))) {return INVALID_MOVE}
+    }else {
         console.log("something went wrong")
         return INVALID_MOVE;
     }
@@ -89,6 +107,40 @@ export function doNothing(G, ctx) {
     } else {
         return INVALID_MOVE;
     }
+}
+
+export function playJackCard(G, ctx, cardID, pawnPosition1, pawnPosition2) {
+    if ((parseInt(ctx.currentPlayer) === G.positions[pawnPosition1.sectionID][pawnPosition1.positionID] ||
+        parseInt(ctx.currentPlayer) === G.positions[pawnPosition2.sectionID][pawnPosition2.positionID])
+        && G.players[ctx.currentPlayer].myCards[cardID].value === "J"
+    ) {
+        if (switchPlayers(G, ctx, pawnPosition1, pawnPosition2)) {
+            G.centerCard = G.players[ctx.currentPlayer].myCards[cardID];
+            G.secret.spentCards.push(G.players[ctx.currentPlayer].myCards.splice(cardID,1)[0]);
+            this.cardToBePlayed = -1;
+            return;
+        }
+    } else {
+        console.log("error 0")
+    }
+    return INVALID_MOVE;
+}
+
+export function switchPlayers(G, ctx, pawnPosition1, pawnPosition2) {
+    if (G.positions[pawnPosition1.sectionID][pawnPosition1.positionID] === -1) {console.log("error 1");return false;}
+    if (G.positions[pawnPosition2.sectionID][pawnPosition2.positionID] === -1) {console.log("error 2");return false;}
+    if (G.positions[pawnPosition1.sectionID][pawnPosition1.positionID] === G.positions[pawnPosition2.sectionID][pawnPosition2.positionID]) {console.log("error 3");return false;}
+    if (pawnPosition1.positionID === 9 &&
+        pawnPosition1.sectionID === G.positions[pawnPosition1.sectionID][pawnPosition1.positionID] &&
+        G.blocking[G.positions[pawnPosition1.sectionID][pawnPosition1.positionID]]) {console.log("error 4");return false;}
+    if (pawnPosition2.positionID === 9 &&
+        pawnPosition2.sectionID === G.positions[pawnPosition2.sectionID][pawnPosition2.positionID] &&
+        G.blocking[G.positions[pawnPosition2.sectionID][pawnPosition2.positionID]]) {console.log("error 5");return false;}
+
+    let temp = G.positions[pawnPosition1.sectionID][pawnPosition1.positionID]
+    G.positions[pawnPosition1.sectionID][pawnPosition1.positionID] = G.positions[pawnPosition2.sectionID][pawnPosition2.positionID]
+    G.positions[pawnPosition2.sectionID][pawnPosition2.positionID] = temp
+    return true
 }
 
 const Dog = {
@@ -166,7 +218,7 @@ const Dog = {
             }
         },
         PlayCards: {
-            moves: { playCard, doNothing },
+            moves: { playCard, playJackCard, doNothing },
             next: "ExchangeCards",
             turn: {
                 moveLimit: 1,

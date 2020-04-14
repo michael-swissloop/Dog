@@ -43,6 +43,7 @@ class Board extends React.Component {
     constructor(props) {
         super(props);
         this.cardToBePlayed = -1;
+        this.switchPosition = [-1,-1];
     }
 
     isActive(id) {
@@ -58,6 +59,32 @@ class Board extends React.Component {
         this.props.moves.playCard(this.cardToBePlayed, {sectionID: this.myPlayerID, positionID: -1});
         this.cardToBePlayed = -1;
         return true;
+    }
+
+    attemptMove(sectionID, positionID) {
+        // console.log(this.cardToBePlayed);
+        if (this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value === "J") {
+            return false;
+        }
+        this.props.moves.playCard(this.cardToBePlayed, {sectionID: sectionID, positionID: positionID})
+        this.cardToBePlayed = -1;
+        return true
+    }
+
+    attemptSwitch(sectionID, positionID) {
+        if (this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value !== "J") {return false}
+        console.log("playing Jack with: " + sectionID+ " and " + positionID)
+        console.log("switchPosition is: " + this.switchPosition[0] + " and " + this.switchPosition[1])
+        if (this.switchPosition[0] < 0) {
+            console.log("changing switchPosition")
+            this.switchPosition = [sectionID, positionID]
+            return false;
+        } else {
+            console.log("executing switch")
+            this.props.moves.playJackCard(this.cardToBePlayed, {"sectionID":this.switchPosition[0], "positionID": this.switchPosition[1]}, {"sectionID":sectionID, "positionID": positionID})
+            this.switchPosition = [-1,-1]
+            return true;
+        }
     }
 
     onClickCard(id) {
@@ -76,26 +103,25 @@ class Board extends React.Component {
     }
 
     onClickPosition(sectionID, positionID) {
-        console.log("testing: "+sectionID+" "+positionID);
-        if (sectionID===this.myPlayerID && positionID===-1) {
-            console.log("at home players")
-            if (this.cardToBePlayed >=0 && this.cardToBePlayed < this.props.G.players[this.myPlayerID].myCards.length) {
+        // console.log("testing: "+sectionID+" "+positionID);
+
+        // Ensure a card is selected
+        if (this.cardToBePlayed >=0 && this.cardToBePlayed < this.props.G.players[this.myPlayerID].myCards.length) {
+            if (this.attemptSwitch(sectionID, positionID)) {return}
+            if (sectionID === this.myPlayerID && positionID === -1) {
+                // console.log("at home players")
                 // console.log(this.cardToBePlayed);
-                this.attemptStart();
+                if(this.attemptStart()) {return}
             }
-        }
-        if (this.props.G.positions[sectionID][positionID] === this.myPlayerID) {
-            console.log("selected my own player")
-            console.log("PlayerID: "+this.myPlayerID);
-            console.log("card: "+this.cardToBePlayed);
-            if (this.cardToBePlayed >=0 && this.cardToBePlayed < this.props.G.players[this.myPlayerID].myCards.length) {
-                console.log(this.cardToBePlayed);
-                this.props.moves.playCard(this.cardToBePlayed, {sectionID: sectionID, positionID: positionID})
-                this.cardToBePlayed = -1;
+            if (this.props.G.positions[sectionID][positionID] === this.myPlayerID) {
+                console.log("selected my own player")
+                // console.log("PlayerID: " + this.myPlayerID);
+                // console.log("card: " + this.cardToBePlayed);
+                if(this.attemptMove(sectionID, positionID)) {return}
             }
-        }
-        if (positionID-20>=0) {
-            console.log("are we winning?")
+            if (positionID - 20 >= 0) {
+                console.log("are we winning?")
+            }
         }
     }
 
@@ -213,9 +239,20 @@ class Board extends React.Component {
                 if (!checkForPossibleMoves(this.props.G, this.myPlayerID)) {
                     this.instructions = "No moves available - Press 'Cannot Play'"
                 } else if (this.cardToBePlayed === -1) {
-                    this.instructions = "Select Card to Play"
+                    this.instructions = "Select Card"
                 } else {
-                    this.instructions = "Select Player or Start"
+                    // TODO change for starting card
+                    if (
+                            (this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value === "Joker" ||
+                            this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value === "K" ||
+                            this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value === "A") &&
+                        this.props.G.atHome[this.myPlayerID] !== 0 &&
+                        this.props.G.positions[this.myPlayerID][9] !== parseInt(this.myPlayerID)
+                    ) {
+                        this.instructions = "Select Player or Start"
+                    } else {
+                        this.instructions = "Select Player"
+                    }
                 }
             } else {
                 this.instructions = "Please wait for other Players"
