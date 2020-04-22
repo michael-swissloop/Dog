@@ -9,7 +9,7 @@ import './board.css';
 // import CardDeck from "./cardDeck";
 // import MyCards from "./myCards";
 import Card from "./card";
-import { checkForPossibleMoves } from "./validMoves";
+import {checkForPossibleMoves, getPossibleMoves} from "./validMoves";
 const params = require('./params.json');
 
 function Circle(props) {
@@ -17,7 +17,7 @@ function Circle(props) {
     if (rotate == null) {
         rotate = 0
     }
-    return <div key={props.id} className={"circle circle-"+props.color} style={{
+    return <div key={props.id} className={"circle circle-"+props.color + ((props.selectable) ? " selectable" : "")} style={{
         left: props.x+"px",
         top: props.y+"px",
         // background: props.color,
@@ -44,6 +44,7 @@ class Board extends React.Component {
         super(props);
         this.cardToBePlayed = -1;
         this.switchPosition = [-1,-1];
+        this.projected = [];
     }
 
     isActive(id) {
@@ -99,6 +100,16 @@ class Board extends React.Component {
         this.cardToBePlayed = id;
 
         this.setState({...this.cardToBePlayed});
+
+        let possibilities = getPossibleMoves(this.props.G, this.myPlayerID).filter(function(move){
+            return move.cardIndex === id;
+        });
+        this.projected = []
+        for (let i = 0; i < possibilities.length; i++) {
+            this.projected.push(possibilities[i].position)
+        }
+
+        this.setState({...this.projected});
         // console.log(this.checkForPossibleMoves());
     }
 
@@ -111,13 +122,19 @@ class Board extends React.Component {
             if (sectionID === this.myPlayerID && positionID === -1) {
                 // console.log("at home players")
                 // console.log(this.cardToBePlayed);
-                if(this.attemptStart()) {return}
+                if(this.attemptStart()) {
+                    this.projected = []
+                    return
+                }
             }
             if (this.props.G.positions[sectionID][positionID] === this.myPlayerID) {
                 console.log("selected my own player")
                 // console.log("PlayerID: " + this.myPlayerID);
                 // console.log("card: " + this.cardToBePlayed);
-                if(this.attemptMove(sectionID, positionID)) {return}
+                if(this.attemptMove(sectionID, positionID)) {
+                    this.projected = [];
+                    return
+                }
             }
             if (positionID - 20 >= 0) {
                 console.log("are we winning?")
@@ -138,6 +155,8 @@ class Board extends React.Component {
                     borderWidth={"5px"}
                     borderColor={params.playerColors[playerID]}
                     onClick={this.onClickPosition.bind(this, playerID, i)}
+                    selectable={this.projected.some(e => e[0] === playerID && e[1] === i)}
+
                 />)
             } else {
                 items.push(<Circle
@@ -146,8 +165,10 @@ class Board extends React.Component {
                     y={params.positions[i][1]*params.positionDelta}
                     color={""+params.playerColors[this.props.G.positions[playerID][i]]}
                     onClick={this.onClickPosition.bind(this, playerID, i)}
+                    selectable={this.projected.some(e => e[0] === playerID && e[1] === i)}
                 />)
             }
+            // console.log(this.projected.some(e => e[0] === 3 && e[1] === 11))
         }
 
         items.push(<Circle
@@ -159,6 +180,7 @@ class Board extends React.Component {
             text={this.props.G.atHome[playerID]}
             rotate={-orientation}
             onClick={this.onClickPosition.bind(this, playerID, -1)}
+            selectable={this.projected.some(e => e[0] === playerID && e[1] === -1)}
         />)
 
         for (let i = 0; i < 4; i++) {
@@ -170,6 +192,7 @@ class Board extends React.Component {
                 borderWidth={"4px"}
                 borderColor={params.playerColors[playerID]}
                 onClick={this.onClickPosition.bind(this, playerID, 20+i)}
+                selectable={this.projected.some(e => e[0] === 10+playerID && e[1] === i)}
             />)
         }
 
@@ -236,6 +259,7 @@ class Board extends React.Component {
             }
         } else {
             if (this.isActive(this.myPlayerID)) {
+                console.log(getPossibleMoves(this.props.G, this.myPlayerID))
                 if (!checkForPossibleMoves(this.props.G, this.myPlayerID)) {
                     this.instructions = "No moves available - Press 'Cannot Play'"
                 } else if (this.cardToBePlayed === -1) {
