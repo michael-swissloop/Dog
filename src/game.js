@@ -46,7 +46,7 @@ function movePawn(G, currentPlayer, pawnLocation, distance) {
     return true;
 }
 
-export function playCard(G, ctx, cardID, pawnPosition) {
+export function playCard(G, ctx, cardID, pawnPosition, additionalParam) {
     // console.log("currPlayer: "+ctx.currentPlayer);
     // console.log("cardID: "+cardID);
     // console.log("pawnPosition: "+pawnPosition.sectionID + " " + pawnPosition.positionID);
@@ -76,7 +76,9 @@ export function playCard(G, ctx, cardID, pawnPosition) {
         pawnPosition.positionID !== -1 &&
         !isNaN(G.players[ctx.currentPlayer].myCards[cardID].value)
     ) {
-        if(!movePawn(G, ctx.currentPlayer, pawnPosition, parseInt(G.players[ctx.currentPlayer].myCards[cardID].value))) {return INVALID_MOVE}
+        if (parseInt(G.players[ctx.currentPlayer].myCards[cardID].value) === 4 && additionalParam === -4) {
+            if(!movePawn(G, ctx.currentPlayer, pawnPosition, -4)) {return INVALID_MOVE}
+        }else if(!movePawn(G, ctx.currentPlayer, pawnPosition, parseInt(G.players[ctx.currentPlayer].myCards[cardID].value))) {return INVALID_MOVE}
     }else {
         console.log("something went wrong")
         return INVALID_MOVE;

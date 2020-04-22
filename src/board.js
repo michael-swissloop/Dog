@@ -45,6 +45,9 @@ class Board extends React.Component {
         this.cardToBePlayed = -1;
         this.switchPosition = [-1,-1];
         this.projected = [];
+        this.projectedDistance = [];
+        this.intendedPlayer = [-1,-1];
+        this.possibleMoves = [];
     }
 
     isActive(id) {
@@ -62,12 +65,12 @@ class Board extends React.Component {
         return true;
     }
 
-    attemptMove(sectionID, positionID) {
+    attemptMove(sectionID, positionID, distance) {
         // console.log(this.cardToBePlayed);
         if (this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value === "J") {
             return false;
         }
-        this.props.moves.playCard(this.cardToBePlayed, {sectionID: sectionID, positionID: positionID})
+        this.props.moves.playCard(this.cardToBePlayed, {sectionID: sectionID, positionID: positionID}, distance)
         this.cardToBePlayed = -1;
         return true
     }
@@ -101,7 +104,7 @@ class Board extends React.Component {
 
         this.setState({...this.cardToBePlayed});
 
-        let possibilities = getPossibleMoves(this.props.G, this.myPlayerID).filter(function(move){
+        let possibilities = this.possibleMoves.filter(function(move){
             return move.cardIndex === id;
         });
         this.projected = []
@@ -131,7 +134,43 @@ class Board extends React.Component {
                 console.log("selected my own player")
                 // console.log("PlayerID: " + this.myPlayerID);
                 // console.log("card: " + this.cardToBePlayed);
-                if(this.attemptMove(sectionID, positionID)) {
+
+                let selectedCard = this.cardToBePlayed
+                // console.log(this.possibleMoves)
+                let possibilities = this.possibleMoves.filter(function(move){
+                    return move.cardIndex === selectedCard && move.position[0] === sectionID && move.position[1] === positionID;
+                });
+                console.log(possibilities)
+                // this.projected = []
+
+                if (possibilities.length === 1) {
+                    if (this.attemptMove(sectionID, positionID)) {
+                        this.projected = [];
+                        return
+                    }
+                } else {
+                    console.log("in here")
+                    this.projected = [];
+                    this.projectedDistance = [];
+                    this.intendedPlayer = [sectionID, positionID]
+                    for (let i = 0; i < possibilities.length; i++) {
+                        this.projected.push([(Math.floor(sectionID+(positionID+possibilities[i].cardValue)/16))%4, (positionID+possibilities[i].cardValue)%16])
+                        this.projectedDistance.push(possibilities[i].cardValue)
+                    }
+                    this.setState({...this.projected});
+                    // console.log(this.projected)
+                    // console.log(this.projectedDistance)
+                }
+            }
+            // console.log(this.projected.some(e => e[0] === sectionID && e[1] === positionID))
+            // console.log(this.projected)
+            // console.log([sectionID, positionID])
+            // console.log(this.projectedDistance.length)
+            if (this.projectedDistance.length !== 0 && this.projected.some(e => e[0] === sectionID && e[1] === positionID)) {
+                // if (this.attemptMove())
+                console.log("something")
+                console.log(this.projected.findIndex(e => e[0] === sectionID && e[1] === positionID))
+                if (this.attemptMove(this.intendedPlayer[0], this.intendedPlayer[1], this.projectedDistance[this.projected.findIndex(e => e[0] === sectionID && e[1] === positionID)])) {
                     this.projected = [];
                     return
                 }
@@ -259,7 +298,8 @@ class Board extends React.Component {
             }
         } else {
             if (this.isActive(this.myPlayerID)) {
-                console.log(getPossibleMoves(this.props.G, this.myPlayerID))
+                this.possibleMoves = getPossibleMoves(this.props.G, this.myPlayerID)
+                console.log(this.possibleMoves)
                 if (!checkForPossibleMoves(this.props.G, this.myPlayerID)) {
                     this.instructions = "No moves available - Press 'Cannot Play'"
                 } else if (this.cardToBePlayed === -1) {
@@ -271,7 +311,7 @@ class Board extends React.Component {
                             this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value === "K" ||
                             this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value === "A") &&
                         this.props.G.atHome[this.myPlayerID] !== 0 &&
-                        this.props.G.positions[this.myPlayerID][9] !== parseInt(this.myPlayerID)
+                        this.props.G.positions[this.myPlayerID][9] !== this.myPlayerID
                     ) {
                         this.instructions = "Select Player or Start"
                     } else {
@@ -279,6 +319,7 @@ class Board extends React.Component {
                     }
                 }
             } else {
+                // this.projected = []
                 this.instructions = "Please wait for other Players"
             }
         }
