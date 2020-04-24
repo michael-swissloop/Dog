@@ -43,6 +43,9 @@ function movePawn(G, currentPlayer, pawnLocation, distance) {
     if (pawnLocation.sectionID === parseInt(currentPlayer) && pawnLocation.positionID === 9) {
         G.blocking[parseInt(currentPlayer)] = false;
     }
+    if (newPos[0] === parseInt(currentPlayer) && newPos[1] === 9 && distance !== -4) {
+        G.allowedHome[parseInt(currentPlayer)] = true;
+    }
     return true;
 }
 
@@ -72,6 +75,21 @@ export function playCard(G, ctx, cardID, pawnPosition, additionalParam) {
         G.players[ctx.currentPlayer].myCards[cardID].value === "K"
     ) {
         if(!movePawn(G, ctx.currentPlayer, pawnPosition, 13)) {return INVALID_MOVE}
+    } else if(
+        pawnPosition.positionID !== -1 &&
+        G.players[ctx.currentPlayer].myCards[cardID].value === "A"
+    ) {
+        if (additionalParam === 11) {
+            if(!movePawn(G, ctx.currentPlayer, pawnPosition, 11)) {return INVALID_MOVE}
+        } else {
+            if(!movePawn(G, ctx.currentPlayer, pawnPosition, 1)) {return INVALID_MOVE}
+        }
+    } else if (
+        pawnPosition.positionID !== -1 &&
+        G.players[ctx.currentPlayer].myCards[cardID].value === "Joker" &&
+        additionalParam !== "switch"
+    ) {
+        if(!movePawn(G, ctx.currentPlayer, pawnPosition, additionalParam)) {return INVALID_MOVE}
     } else if (
         pawnPosition.positionID !== -1 &&
         !isNaN(G.players[ctx.currentPlayer].myCards[cardID].value)
@@ -79,7 +97,7 @@ export function playCard(G, ctx, cardID, pawnPosition, additionalParam) {
         if (parseInt(G.players[ctx.currentPlayer].myCards[cardID].value) === 4 && additionalParam === -4) {
             if(!movePawn(G, ctx.currentPlayer, pawnPosition, -4)) {return INVALID_MOVE}
         }else if(!movePawn(G, ctx.currentPlayer, pawnPosition, parseInt(G.players[ctx.currentPlayer].myCards[cardID].value))) {return INVALID_MOVE}
-    }else {
+    } else {
         console.log("something went wrong")
         return INVALID_MOVE;
     }
@@ -167,6 +185,7 @@ const Dog = {
             winPositions: Array((2*Math.ceil(ctx.numPlayers/2))).fill(Array(4).fill(-1)),
             atHome: Array(ctx.numPlayers).fill(4),
             blocking: Array(ctx.numPlayers).fill(null).map(()=>(false)),
+            allowedHome: Array(ctx.numPlayers).fill(null).map(()=>(false)),
             centerCard: {},
             secret: {
                 deck: deck,
@@ -239,7 +258,7 @@ const Dog = {
                     }
                 },
                 onBegin: (G, ctx) => {
-                    console.log("in onBegin")
+                    // console.log("in onBegin")
                     // Check if there are still cards, if not end phase
                     let check = true;
                     for (let i = 0; i < ctx.numPlayers; i++) {

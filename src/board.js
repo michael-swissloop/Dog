@@ -9,7 +9,7 @@ import './board.css';
 // import CardDeck from "./cardDeck";
 // import MyCards from "./myCards";
 import Card from "./card";
-import {checkForPossibleMoves, getPossibleMoves} from "./validMoves";
+import {checkForPossibleMoves, checkSwitchAllowed, getPossibleMoves} from "./validMoves";
 const params = require('./params.json');
 
 function Circle(props) {
@@ -77,17 +77,50 @@ class Board extends React.Component {
 
     attemptSwitch(sectionID, positionID) {
         if (this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value !== "J") {return false}
-        console.log("playing Jack with: " + sectionID+ " and " + positionID)
-        console.log("switchPosition is: " + this.switchPosition[0] + " and " + this.switchPosition[1])
+        if (this.props.G.positions[sectionID][positionID] < 0) {return false}
+        // console.log("playing Jack with: " + sectionID+ " and " + positionID)
+        // console.log("switchPosition is: " + this.switchPosition[0] + " and " + this.switchPosition[1])
         if (this.switchPosition[0] < 0) {
             console.log("changing switchPosition")
             this.switchPosition = [sectionID, positionID]
+            this.projected = []
+            let cardID = this.cardToBePlayed
+            let possibilities = this.possibleMoves.filter(function(move){
+                return move.cardIndex === cardID && ((move.position[0] === sectionID && move.position[1] === positionID) || (move.target[0] === sectionID && move.target[1] === positionID));
+            });
+            // if (possibilities.length === 0) {
+            //     possibilities = this.possibleMoves.filter(function(move){
+            //         return move.cardIndex === cardID && move.target === [sectionID, positionID];
+            //     });
+            // }
+            console.log(possibilities)
+            for (let i = 0; i < possibilities.length; i++) {
+                if (possibilities[i].position[0] === sectionID && possibilities[i].position[1] === positionID) {
+                    this.projected.push(possibilities[i].target)
+                } else {
+                    this.projected.push(possibilities[i].position)
+                }
+            }
+            console.log(this.projected)
+            this.setState({...this.projected});
             return false;
         } else {
             console.log("executing switch")
-            this.props.moves.playJackCard(this.cardToBePlayed, {"sectionID":this.switchPosition[0], "positionID": this.switchPosition[1]}, {"sectionID":sectionID, "positionID": positionID})
-            this.switchPosition = [-1,-1]
-            return true;
+            if (checkSwitchAllowed(this.props.G, this.myPlayerID, {"sectionID": this.switchPosition[0], "positionID": this.switchPosition[1]}, {"sectionID": sectionID, "positionID": positionID})) {
+                this.props.moves.playJackCard(this.cardToBePlayed, {
+                    "sectionID": this.switchPosition[0],
+                    "positionID": this.switchPosition[1]
+                }, {"sectionID": sectionID, "positionID": positionID})
+                this.projected = []
+                this.switchPosition = [-1,-1];
+                this.setState({...this.projected});
+                this.cardToBePlayed = -1;
+                return true;
+            }
+            this.projected = []
+            this.switchPosition = [-1,-1];
+            this.setState({...this.projected});
+            return false;
         }
     }
 
@@ -108,8 +141,14 @@ class Board extends React.Component {
             return move.cardIndex === id;
         });
         this.projected = []
+        this.switchPosition = [-1,-1];
+        this.projectedDistance = [];
+        this.intendedPlayer = [-1,-1];
         for (let i = 0; i < possibilities.length; i++) {
             this.projected.push(possibilities[i].position)
+            if (possibilities[i].cardValue === "J") {
+                this.projected.push(possibilities[i].target)
+            }
         }
 
         this.setState({...this.projected});
@@ -148,6 +187,8 @@ class Board extends React.Component {
                         this.projected = [];
                         return
                     }
+                } else if (this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value === "J") {
+
                 } else {
                     console.log("in here")
                     this.projected = [];

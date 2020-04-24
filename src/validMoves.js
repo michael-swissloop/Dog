@@ -38,6 +38,22 @@ export function getPossibleMoves(G, playerID) {
         } else if (G.players[playerID].myCards[i].value === "Q") {
             possibleTravel.push({"cardIndex": i, "cardValue": 12})
             lowestPossibleMove = Math.min(lowestPossibleMove, 12)
+        } else if (G.players[playerID].myCards[i].value === "Joker") {
+            possibleTravel.push({"cardIndex": i, "cardValue": -4})
+            possibleTravel.push({"cardIndex": i, "cardValue": 1})
+            possibleTravel.push({"cardIndex": i, "cardValue": 2})
+            possibleTravel.push({"cardIndex": i, "cardValue": 3})
+            possibleTravel.push({"cardIndex": i, "cardValue": 4})
+            possibleTravel.push({"cardIndex": i, "cardValue": 5})
+            possibleTravel.push({"cardIndex": i, "cardValue": 6})
+            possibleTravel.push({"cardIndex": i, "cardValue": 7})
+            possibleTravel.push({"cardIndex": i, "cardValue": 8})
+            possibleTravel.push({"cardIndex": i, "cardValue": 9})
+            possibleTravel.push({"cardIndex": i, "cardValue": 10})
+            possibleTravel.push({"cardIndex": i, "cardValue": 11})
+            possibleTravel.push({"cardIndex": i, "cardValue": 12})
+            possibleTravel.push({"cardIndex": i, "cardValue": 13})
+            lowestPossibleMove = -4
         }
     }
     // console.log("Lowest Possible: " + lowestPossibleMove)
@@ -53,25 +69,50 @@ export function getPossibleMoves(G, playerID) {
         }
     }
 
+    let myOutPlayers = []
+    let otherOutPlayers = []
+
     // Iterate through gameboard (because I'm too lazy)
     for (let i = 0; i < G.positions.length; i++) {
         for (let j = 0; j < 16; j++) {
             // Check if Switching is an option
-
+            if (handContainsSwitch.length !== 0) {
+                if (G.positions[i][j] === playerID) {
+                    if (G.blocking[playerID] && playerID === i && j === 9) {}
+                    else {myOutPlayers.push([i,j])}
+                }
+                else if (G.positions[i][j] !== -1) {
+                    if (G.blocking[i] && G.positions[i][j] === i && j === 9) {}
+                    else {otherOutPlayers.push([i,j])}
+                }
+            }
 
             // Check if Moving is an option
             if (G.positions[i][j] === playerID && lowestPossibleMove < 100) {
                 for (let k = 0; k < possibleTravel.length; k++) {
                     if (checkForBlock(G, i, j, possibleTravel[k].cardValue)) {
                         possibleMoves.push({"cardIndex": possibleTravel[k].cardIndex, "cardValue": possibleTravel[k].cardValue, "position": [i, j]})
+
+                    //    TODO: go home possibilities
+                        if (
+                            false
+                        ) {
+
+                        }
                     }
                 }
-
-                // if (checkForBlock(G, i, j, lowestPossibleMove)) {
-                //     possibleMoves.push({"cardIndex": 0, "cardValue": lowestPossibleMove, "position": [i, j]})
-                // }
             }
 
+        }
+    }
+
+    if (handContainsSwitch.length !== 0) {
+        for (let jack = 0; jack < handContainsSwitch.length; jack++) {
+            for (let i = 0; i < myOutPlayers.length; i++) {
+                for (let j = 0; j < otherOutPlayers.length; j++) {
+                    possibleMoves.push({"cardIndex": handContainsSwitch[jack], "cardValue": "J", "position": myOutPlayers[i], "target": otherOutPlayers[j]})
+                }
+            }
         }
     }
 
@@ -111,6 +152,7 @@ export function checkForBlock(G, sectionID, positionID, distance) {
 }
 
 export function checkSwitchAllowed(G, playerID, pawnPosition1, pawnPosition2) {
+    console.log(G.positions)
     if (G.positions[pawnPosition1.sectionID][pawnPosition1.positionID] === -1) {return false;}
     if (G.positions[pawnPosition2.sectionID][pawnPosition2.positionID] === -1) {return false;}
     if (G.positions[pawnPosition1.sectionID][pawnPosition1.positionID] === G.positions[pawnPosition2.sectionID][pawnPosition2.positionID]) {return false;}
