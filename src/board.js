@@ -65,12 +65,13 @@ class Board extends React.Component {
         return true;
     }
 
-    attemptMove(sectionID, positionID, distance) {
+    attemptMove(sectionID, positionID, distance, home) {
         // console.log(this.cardToBePlayed);
         if (this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value === "J") {
             return false;
         }
-        this.props.moves.playCard(this.cardToBePlayed, {sectionID: sectionID, positionID: positionID}, distance)
+        console.log("attemptMove: "+ home)
+        this.props.moves.playCard(this.cardToBePlayed, {sectionID: sectionID, positionID: positionID}, distance, home)
         this.cardToBePlayed = -1;
         return true
     }
@@ -200,7 +201,11 @@ class Board extends React.Component {
                     this.projectedDistance = [];
                     this.intendedPlayer = [sectionID, positionID]
                     for (let i = 0; i < possibilities.length; i++) {
-                        this.projected.push([(Math.floor(sectionID+(positionID+possibilities[i].cardValue)/16))%4, (positionID+possibilities[i].cardValue)%16])
+                        if (possibilities[i].home) {
+                            this.projected.push([(Math.floor(sectionID + (positionID + possibilities[i].cardValue) / 16)) % 4, (positionID + possibilities[i].cardValue) % 16 + 10])
+                        } else {
+                            this.projected.push([(Math.floor(sectionID + (positionID + possibilities[i].cardValue) / 16)) % 4, (positionID + possibilities[i].cardValue) % 16])
+                        }
                         this.projectedDistance.push(possibilities[i].cardValue)
                     }
                     this.setState({...this.projected});
@@ -210,7 +215,7 @@ class Board extends React.Component {
                 // if (this.attemptMove())
                 console.log("something")
                 console.log(this.projected.findIndex(e => e[0] === sectionID && e[1] === positionID))
-                if (this.attemptMove(this.intendedPlayer[0], this.intendedPlayer[1], this.projectedDistance[this.projected.findIndex(e => e[0] === sectionID && e[1] === positionID)])) {
+                if (this.attemptMove(this.intendedPlayer[0], this.intendedPlayer[1], this.projectedDistance[this.projected.findIndex(e => e[0] === sectionID && e[1] === positionID)], positionID >= 20)) {
                     this.projected = [];
                     return
                 }
@@ -224,6 +229,7 @@ class Board extends React.Component {
     getBoardSection(playerID, screenPos, orientation) {
         const items = []
 
+        // Draw main path
         for (let i = 0; i < 16; i++) {
             if(i===9){
                 items.push(<Circle
@@ -249,6 +255,7 @@ class Board extends React.Component {
             }
         }
 
+        // Draw at home ball
         items.push(<Circle
             key={900+playerID}
             x={params.homePosition[0]*params.positionDelta}
@@ -261,6 +268,7 @@ class Board extends React.Component {
             selectable={this.projected.some(e => e[0] === playerID && e[1] === -1)}
         />)
 
+        // Draw win positions
         for (let i = 0; i < 4; i++) {
             items.push(<Circle
                 key={500+100*playerID+i}
@@ -270,7 +278,7 @@ class Board extends React.Component {
                 borderWidth={"4px"}
                 borderColor={params.playerColors[playerID]}
                 onClick={this.onClickPosition.bind(this, playerID, 20+i)}
-                selectable={this.projected.some(e => e[0] === 10+playerID && e[1] === i)}
+                selectable={this.projected.some(e => e[0] === playerID && e[1] === i+20)}
             />)
         }
 

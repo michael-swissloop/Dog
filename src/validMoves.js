@@ -65,7 +65,7 @@ export function getPossibleMoves(G, playerID) {
         handContainsStart
     ) {
         for (let i = 0; i < StartsInHand.length; i++) {
-            possibleMoves.push({"cardIndex": StartsInHand[i], "cardValue": G.players[playerID].myCards[StartsInHand[i]].value, "position": [playerID, -1]})
+            possibleMoves.push({"cardIndex": StartsInHand[i], "cardValue": G.players[playerID].myCards[StartsInHand[i]].value, "position": [playerID, -1], "home":false})
         }
     }
 
@@ -91,13 +91,13 @@ export function getPossibleMoves(G, playerID) {
             if (G.positions[i][j] === playerID && lowestPossibleMove < 100) {
                 for (let k = 0; k < possibleTravel.length; k++) {
                     if (checkForBlock(G, i, j, possibleTravel[k].cardValue)) {
-                        possibleMoves.push({"cardIndex": possibleTravel[k].cardIndex, "cardValue": possibleTravel[k].cardValue, "position": [i, j]})
+                        possibleMoves.push({"cardIndex": possibleTravel[k].cardIndex, "cardValue": possibleTravel[k].cardValue, "position": [i, j], "home":false})
 
                     //    TODO: go home possibilities
                         if (
-                            false
+                            checkHomePossible(G, playerID, {"sectionID":i, "positionID":j}, possibleTravel[k].cardValue)
                         ) {
-
+                            possibleMoves.push({"cardIndex": possibleTravel[k].cardIndex, "cardValue": possibleTravel[k].cardValue, "position": [i, j], "home":true})
                         }
                     }
                 }
@@ -110,7 +110,7 @@ export function getPossibleMoves(G, playerID) {
         for (let jack = 0; jack < handContainsSwitch.length; jack++) {
             for (let i = 0; i < myOutPlayers.length; i++) {
                 for (let j = 0; j < otherOutPlayers.length; j++) {
-                    possibleMoves.push({"cardIndex": handContainsSwitch[jack], "cardValue": "J", "position": myOutPlayers[i], "target": otherOutPlayers[j]})
+                    possibleMoves.push({"cardIndex": handContainsSwitch[jack], "cardValue": "J", "position": myOutPlayers[i], "target": otherOutPlayers[j], "home":false})
                 }
             }
         }
@@ -165,5 +165,15 @@ export function checkSwitchAllowed(G, playerID, pawnPosition1, pawnPosition2) {
 }
 
 export function checkHomePossible(G, playerID, pawnPosition, distance) {
-
+    let newPos = [(Math.floor(pawnPosition.sectionID+(pawnPosition.positionID+distance)/16))%4, (pawnPosition.positionID+distance)%16]
+    if (newPos[0] !== playerID) {return false}
+    if (newPos[1] > 13) {return false}
+    if (newPos[1] < 10) {return false}
+    if (pawnPosition.sectionID === playerID && pawnPosition.positionID === 9 && !G.allowedHome[playerID]) {return false}
+    if (pawnPosition.sectionID === playerID && pawnPosition.positionID > 9) {return false}
+    if (pawnPosition.sectionID === (playerID+1)%4) {return false}
+    for (let i = 0; i < newPos[1]-10; i++) {
+        if (G.winPositions[playerID][i] !== -1) {return false}
+    }
+    return true
 }

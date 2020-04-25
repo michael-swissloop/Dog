@@ -5,7 +5,7 @@
 import { getNewCardDeck, shuffleDeck } from './cardDeck';
 // import {Game, PlayerView} from "boardgame.io/core";
 import {ActivePlayers, INVALID_MOVE} from "boardgame.io/core";
-import { checkForPossibleMoves, checkForBlock } from "./validMoves"
+import {checkForPossibleMoves, checkForBlock, checkHomePossible} from "./validMoves"
 
 function StartPawn(G, currentPlayer) {
     if (G.positions[parseInt(currentPlayer)][9] !== -1) {
@@ -24,7 +24,7 @@ function isVictory(winPositions, currentPlayer) {
     }
 }
 
-function movePawn(G, currentPlayer, pawnLocation, distance) {
+function movePawn(G, currentPlayer, pawnLocation, distance, home) {
     let newPos = [(Math.floor(pawnLocation.sectionID+(pawnLocation.positionID+distance)/16))%4, (pawnLocation.positionID+distance)%16]
     console.log(distance);
     console.log(pawnLocation);
@@ -32,17 +32,36 @@ function movePawn(G, currentPlayer, pawnLocation, distance) {
     if (!checkForBlock(G, pawnLocation.sectionID, pawnLocation.positionID, distance)) {
         return false;
     }
+    // Ensure correct player on position
     if (G.positions[pawnLocation.sectionID][pawnLocation.positionID] === parseInt(currentPlayer)) {
-        // console.log(newPos);
-        G.positions[pawnLocation.sectionID][pawnLocation.positionID] = -1;
-        if (G.positions[newPos[0]][newPos[1]] < 6 && G.positions[newPos[0]][newPos[1]] >= 0) {
-            G.atHome[G.positions[newPos[0]][newPos[1]]]++;
+
+        if (home) {
+            if (checkHomePossible(G, parseInt(currentPlayer), pawnLocation, distance)) {
+                // remove player
+                G.positions[pawnLocation.sectionID][pawnLocation.positionID] = -1;
+                // place player at target position
+                G.winPositions[newPos[0]][newPos[1]-10] = parseInt(currentPlayer);
+            } else {
+                return false
+            }
         }
-        G.positions[newPos[0]][newPos[1]] = parseInt(currentPlayer);
+
+        else {
+            // remove player
+            G.positions[pawnLocation.sectionID][pawnLocation.positionID] = -1;
+            // remove player at target position
+            if (G.positions[newPos[0]][newPos[1]] < 6 && G.positions[newPos[0]][newPos[1]] >= 0) {
+                G.atHome[G.positions[newPos[0]][newPos[1]]]++;
+            }
+            // place player at target position
+            G.positions[newPos[0]][newPos[1]] = parseInt(currentPlayer);
+        }
     }
+    // remove blocking param when moving away from blocking location
     if (pawnLocation.sectionID === parseInt(currentPlayer) && pawnLocation.positionID === 9) {
         G.blocking[parseInt(currentPlayer)] = false;
     }
+    // allowedHome logic
     if (newPos[1] === 9) {
         G.allowedHome[newPos[0]] = false;
     }
@@ -55,7 +74,7 @@ function movePawn(G, currentPlayer, pawnLocation, distance) {
     return true;
 }
 
-export function playCard(G, ctx, cardID, pawnPosition, additionalParam) {
+export function playCard(G, ctx, cardID, pawnPosition, additionalParam, home) {
     // console.log("currPlayer: "+ctx.currentPlayer);
     // console.log("cardID: "+cardID);
     // console.log("pawnPosition: "+pawnPosition.sectionID + " " + pawnPosition.positionID);
@@ -76,27 +95,27 @@ export function playCard(G, ctx, cardID, pawnPosition, additionalParam) {
         pawnPosition.positionID !== -1 &&
         G.players[ctx.currentPlayer].myCards[cardID].value === "Q"
     ) {
-        if(!movePawn(G, ctx.currentPlayer, pawnPosition, 12)) {return INVALID_MOVE}
+        if(!movePawn(G, ctx.currentPlayer, pawnPosition, 12, home)) {return INVALID_MOVE}
     } else if (
         pawnPosition.positionID !== -1 &&
         G.players[ctx.currentPlayer].myCards[cardID].value === "K"
     ) {
-        if(!movePawn(G, ctx.currentPlayer, pawnPosition, 13)) {return INVALID_MOVE}
+        if(!movePawn(G, ctx.currentPlayer, pawnPosition, 13, home)) {return INVALID_MOVE}
     } else if(
         pawnPosition.positionID !== -1 &&
         G.players[ctx.currentPlayer].myCards[cardID].value === "A"
     ) {
         if (additionalParam === 11) {
-            if(!movePawn(G, ctx.currentPlayer, pawnPosition, 11)) {return INVALID_MOVE}
+            if(!movePawn(G, ctx.currentPlayer, pawnPosition, 11, home)) {return INVALID_MOVE}
         } else {
-            if(!movePawn(G, ctx.currentPlayer, pawnPosition, 1)) {return INVALID_MOVE}
+            if(!movePawn(G, ctx.currentPlayer, pawnPosition, 1, home)) {return INVALID_MOVE}
         }
     } else if (
         pawnPosition.positionID !== -1 &&
         G.players[ctx.currentPlayer].myCards[cardID].value === "Joker" &&
         Number.isInteger(additionalParam)
     ) {
-        if(!movePawn(G, ctx.currentPlayer, pawnPosition, additionalParam)) {return INVALID_MOVE}
+        if(!movePawn(G, ctx.currentPlayer, pawnPosition, additionalParam, home)) {return INVALID_MOVE}
     } else if (
         pawnPosition.positionID !== -1 &&
         G.players[ctx.currentPlayer].myCards[cardID].value === "Joker" &&
@@ -112,8 +131,8 @@ export function playCard(G, ctx, cardID, pawnPosition, additionalParam) {
         !isNaN(G.players[ctx.currentPlayer].myCards[cardID].value)
     ) {
         if (parseInt(G.players[ctx.currentPlayer].myCards[cardID].value) === 4 && additionalParam === -4) {
-            if(!movePawn(G, ctx.currentPlayer, pawnPosition, -4)) {return INVALID_MOVE}
-        }else if(!movePawn(G, ctx.currentPlayer, pawnPosition, parseInt(G.players[ctx.currentPlayer].myCards[cardID].value))) {return INVALID_MOVE}
+            if(!movePawn(G, ctx.currentPlayer, pawnPosition, -4, false)) {return INVALID_MOVE}
+        }else if(!movePawn(G, ctx.currentPlayer, pawnPosition, parseInt(G.players[ctx.currentPlayer].myCards[cardID].value), home)) {return INVALID_MOVE}
     } else {
         console.log("something went wrong")
         return INVALID_MOVE;
