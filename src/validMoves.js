@@ -152,7 +152,6 @@ export function checkForBlock(G, sectionID, positionID, distance) {
 }
 
 export function checkSwitchAllowed(G, playerID, pawnPosition1, pawnPosition2) {
-    console.log(G.positions)
     if (G.positions[pawnPosition1.sectionID][pawnPosition1.positionID] === -1) {return false;}
     if (G.positions[pawnPosition2.sectionID][pawnPosition2.positionID] === -1) {return false;}
     if (G.positions[pawnPosition1.sectionID][pawnPosition1.positionID] === G.positions[pawnPosition2.sectionID][pawnPosition2.positionID]) {return false;}
@@ -163,4 +162,8 @@ export function checkSwitchAllowed(G, playerID, pawnPosition1, pawnPosition2) {
         pawnPosition2.sectionID === G.positions[pawnPosition2.sectionID][pawnPosition2.positionID] &&
         G.blocking[G.positions[pawnPosition2.sectionID][pawnPosition2.positionID]]) {return false;}
     return true;
+}
+
+export function checkHomePossible(G, playerID, pawnPosition, distance) {
+
 }
