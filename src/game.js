@@ -25,20 +25,20 @@ function isVictory(winPositions, currentPlayer) {
 }
 
 function movePawn(G, currentPlayer, pawnLocation, distance, home) {
-    let newPos = [(Math.floor(pawnLocation.sectionID+(pawnLocation.positionID+distance)/16))%4, (pawnLocation.positionID+distance)%16]
+    let newPos = [(Math.floor(pawnLocation.sectionID+(pawnLocation.positionID+distance)/16))%G.positions.length, (pawnLocation.positionID+distance)%16]
     console.log(distance);
     console.log(pawnLocation);
     console.log(newPos);
 
     if (pawnLocation.positionID >= 20) {
         if (G.winPositions[pawnLocation.sectionID][pawnLocation.positionID-20] !== parseInt(currentPlayer)) {
-            console.log("bad 1")
+            // console.log("bad 1")
             return false
         }
         if (distance < 4-(pawnLocation.positionID-20) && distance > 0) {
             for (let j = 0; j < distance; j++) {
                 if (G.winPositions[pawnLocation.sectionID][pawnLocation.positionID - 20 + j + 1] !== -1) {
-                    console.log("bad 2")
+                    // console.log("bad 2")
                     return false
                 }
             }
@@ -98,7 +98,7 @@ export function playCard(G, ctx, cardID, pawnPosition, additionalParam, home) {
     // console.log("cardID: "+cardID);
     // console.log("pawnPosition: "+pawnPosition.sectionID + " " + pawnPosition.positionID);
     // console.log("card value: "+G.players[ctx.currentPlayer].myCards[cardID].value);
-    console.log(typeof additionalParam)
+    // console.log(typeof additionalParam)
     if(
         pawnPosition.sectionID === parseInt(ctx.currentPlayer) &&
         pawnPosition.positionID === -1 &&
@@ -175,7 +175,7 @@ export function doNothing(G, ctx) {
         G.players[ctx.currentPlayer].myCards = [];
     }
     if (G.players[ctx.currentPlayer].myCards.length === 0) {
-        console.log("attempted endTurn");
+        // console.log("attempted endTurn");
     }
     if (G.players[ctx.currentPlayer].myCards.length === 0) {
         return;
@@ -195,7 +195,7 @@ export function playJackCard(G, ctx, cardID, pawnPosition1, pawnPosition2) {
             return;
         }
     } else {
-        console.log("error 0")
+        // console.log("error 0")
     }
     return INVALID_MOVE;
 }

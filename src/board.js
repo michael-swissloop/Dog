@@ -13,6 +13,7 @@ import {checkForPossibleMoves, checkSwitchAllowed, getPossibleMoves} from "./val
 const params = require('./params.json');
 
 function Circle(props) {
+    // Draws circle with appropriate params for a boardgame field
     let rotate = props.rotate
     if (rotate == null) {
         rotate = 0
@@ -31,6 +32,7 @@ function Circle(props) {
 }
 
 class Board extends React.Component {
+    // Gameboard class
     static propTypes = {
         G: PropTypes.any.isRequired,
         ctx: PropTypes.any.isRequired,
@@ -51,11 +53,13 @@ class Board extends React.Component {
     }
 
     isActive(id) {
+        // asks if current player is Active
         if (!this.props.isActive) return false;
         return true;
     }
 
     attemptStart() {
+        // attempts to start a pawn
         if (!this.isActive(this.myPlayerID)){return false}
         if (this.props.G.blocking[this.myPlayerID]) { return false; }
         if (!["A", "K", "Joker"].includes(this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value)) {return false;}
@@ -66,17 +70,19 @@ class Board extends React.Component {
     }
 
     attemptMove(sectionID, positionID, distance, home) {
-        // console.log(this.cardToBePlayed);
+        // attempts to move a pawn a certain distance (maybe negative?), and home if home===true
+        // check for applicable card
         if (this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value === "J") {
             return false;
         }
-        console.log("attemptMove: "+ home)
+        // cleanup
         this.props.moves.playCard(this.cardToBePlayed, {sectionID: sectionID, positionID: positionID}, distance, home)
         this.cardToBePlayed = -1;
         return true
     }
 
     attemptSwitch(sectionID, positionID) {
+        // attempts to switch two players
         // Check for correct card
         if (this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value !== "J" &&
             this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value !== "Joker") {return false}
@@ -85,7 +91,7 @@ class Board extends React.Component {
 
         // evaluate first player select
         if (this.switchPosition[0] < 0) {
-            console.log("changing switchPosition")
+            // console.log("changing switchPosition")
             this.switchPosition = [sectionID, positionID]
             this.projected = []
             let cardID = this.cardToBePlayed
@@ -95,7 +101,7 @@ class Board extends React.Component {
                     ((move.position[0] === sectionID && move.position[1] === positionID) ||
                         (move.target[0] === sectionID && move.target[1] === positionID));
             });
-            console.log(possibilities)
+            // console.log(possibilities)
             for (let i = 0; i < possibilities.length; i++) {
                 if (possibilities[i].position[0] === sectionID && possibilities[i].position[1] === positionID) {
                     this.projected.push(possibilities[i].target)
@@ -103,17 +109,18 @@ class Board extends React.Component {
                     this.projected.push(possibilities[i].position)
                 }
             }
-            console.log(this.projected)
+            // console.log(this.projected)
             this.setState({...this.projected});
             return false;
         } else {
-            console.log("executing switch")
+            // console.log("executing switch")
             if (this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value === "Joker") {
                 // If killing is an option, ask if kill or switch
+                let boardSize = 16*this.props.ctx.numPlayers
                 if (
                     this.props.G.positions[this.switchPosition[0]][this.switchPosition[1]] === this.myPlayerID &&
-                    (((((sectionID*16 + positionID) - (this.switchPosition[0]*16+this.switchPosition[1]))%64)+64)%64 <= 13 ||
-                        ((((sectionID*16 + positionID) - (this.switchPosition[0]*16+this.switchPosition[1]))%64)+64)%64 === ((-4+64)%64))
+                    (((((sectionID*16 + positionID) - (this.switchPosition[0]*16+this.switchPosition[1]))%boardSize)+boardSize)%boardSize <= 13 ||
+                        ((((sectionID*16 + positionID) - (this.switchPosition[0]*16+this.switchPosition[1]))%boardSize)+boardSize)%boardSize === ((-4+boardSize)%boardSize))
                 ) {
                     if (window.confirm("Click OK to kill, cancel to switch (like J)")) {return false;}
                 }
@@ -177,38 +184,43 @@ class Board extends React.Component {
         if (this.cardToBePlayed >=0 && this.cardToBePlayed < this.props.G.players[this.myPlayerID].myCards.length) {
             // Attempt Switch if Jack card
             if (this.attemptSwitch(sectionID, positionID)) {return}
+            // Attempt start if clicked on -1
             if (sectionID === this.myPlayerID && positionID === -1) {
                 if(this.attemptStart()) {
                     this.projected = []
                     return
                 }
             }
+            // Ensure click on own player in normal gameboard
             if (this.props.G.positions[sectionID][positionID] === this.myPlayerID) {
-                console.log("selected my own player")
+                // console.log("selected my own player")
 
+                // get possible moves
                 let selectedCard = this.cardToBePlayed
                 let possibilities = this.possibleMoves.filter(function(move){
                     return move.cardIndex === selectedCard && move.position[0] === sectionID && move.position[1] === positionID;
                 });
-                console.log(possibilities)
+                // console.log(possibilities)
 
+                // if only one possible move -> execute
                 if (possibilities.length === 1) {
                     if (this.attemptMove(sectionID, positionID, possibilities[0].cardValue)) {
                         this.projected = [];
                         return
                     }
                 } else if (this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value === "J") {
-
+                // if jack do nothing
                 } else {
-                    console.log("in here")
+                    // if multiple options show these
+                    // console.log("in here")
                     this.projected = [];
                     this.projectedDistance = [];
                     this.intendedPlayer = [sectionID, positionID]
                     for (let i = 0; i < possibilities.length; i++) {
                         if (possibilities[i].home) {
-                            this.projected.push([(Math.floor(sectionID + (positionID + possibilities[i].cardValue) / 16)) % 4, (positionID + possibilities[i].cardValue) % 16 + 10])
+                            this.projected.push([(Math.floor(sectionID + (positionID + possibilities[i].cardValue) / 16)) % this.props.ctx.numPlayers, (positionID + possibilities[i].cardValue) % 16 + 10])
                         } else {
-                            this.projected.push([(Math.floor(sectionID + (positionID + possibilities[i].cardValue) / 16)) % 4, (positionID + possibilities[i].cardValue) % 16])
+                            this.projected.push([(Math.floor(sectionID + (positionID + possibilities[i].cardValue) / 16)) % this.props.ctx.numPlayers, (positionID + possibilities[i].cardValue) % 16])
                         }
                         this.projectedDistance.push(possibilities[i].cardValue)
                     }
@@ -217,21 +229,21 @@ class Board extends React.Component {
             }
             if (this.projectedDistance.length !== 0 && this.projected.some(e => e[0] === sectionID && e[1] === positionID)) {
                 // if (this.attemptMove())
-                console.log("something")
-                console.log(this.projected.findIndex(e => e[0] === sectionID && e[1] === positionID))
+                // console.log("something")
+                // console.log(this.projected.findIndex(e => e[0] === sectionID && e[1] === positionID))
                 if (this.attemptMove(this.intendedPlayer[0], this.intendedPlayer[1], this.projectedDistance[this.projected.findIndex(e => e[0] === sectionID && e[1] === positionID)], positionID >= 20)) {
                     this.projected = [];
                     return
                 }
             }
             if (positionID - 20 >= 0) {
-                console.log("are we winning?")
+                // console.log("are we winning?")
                 if (sectionID === this.myPlayerID && this.props.G.winPositions[this.myPlayerID][positionID-20] === this.myPlayerID) {
                     let selectedCard = this.cardToBePlayed
                     let possibilities = this.possibleMoves.filter(function(move) {
                         return move.cardIndex === selectedCard && move.position[0] === sectionID && move.position[1] === positionID;
                     })
-                    console.log(possibilities)
+                    // console.log(possibilities)
                     if (possibilities.length === 1) {
                         if (this.attemptMove(sectionID, positionID, possibilities[0].cardValue)) {
                             this.projected = [];
@@ -239,7 +251,7 @@ class Board extends React.Component {
                         }
                     }
                     else {
-                        console.log("in here 2")
+                        // console.log("in here 2")
                         this.projected = []
                         this.projectedDistance = []
                         this.intendedPlayer = [sectionID, positionID]
@@ -363,7 +375,7 @@ class Board extends React.Component {
                 } else if (this.cardToBePlayed === -1) {
                     this.instructions = "Select Card"
                 } else {
-                    // TODO change for starting card
+                    // TODO change for starting card, switching card, ...
                     if (
                             (this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value === "Joker" ||
                             this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value === "K" ||
