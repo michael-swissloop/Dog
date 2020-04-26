@@ -29,6 +29,25 @@ function movePawn(G, currentPlayer, pawnLocation, distance, home) {
     console.log(distance);
     console.log(pawnLocation);
     console.log(newPos);
+
+    if (pawnLocation.positionID >= 20) {
+        if (G.winPositions[pawnLocation.sectionID][pawnLocation.positionID-20] !== parseInt(currentPlayer)) {
+            console.log("bad 1")
+            return false
+        }
+        if (distance < 4-(pawnLocation.positionID-20) && distance > 0) {
+            for (let j = 0; j < distance; j++) {
+                if (G.winPositions[pawnLocation.sectionID][pawnLocation.positionID - 20 + j + 1] !== -1) {
+                    console.log("bad 2")
+                    return false
+                }
+            }
+            G.winPositions[pawnLocation.sectionID][pawnLocation.positionID-20] = -1
+            G.winPositions[pawnLocation.sectionID][pawnLocation.positionID-20+distance] = parseInt(currentPlayer)
+            return true
+        } else {return false}
+    }
+
     if (!checkForBlock(G, pawnLocation.sectionID, pawnLocation.positionID, distance)) {
         return false;
     }
@@ -131,7 +150,7 @@ export function playCard(G, ctx, cardID, pawnPosition, additionalParam, home) {
         !isNaN(G.players[ctx.currentPlayer].myCards[cardID].value)
     ) {
         if (parseInt(G.players[ctx.currentPlayer].myCards[cardID].value) === 4 && additionalParam === -4) {
-            if(!movePawn(G, ctx.currentPlayer, pawnPosition, -4, false)) {return INVALID_MOVE}
+            if(!movePawn(G, ctx.currentPlayer, pawnPosition, -4, home)) {return INVALID_MOVE}
         }else if(!movePawn(G, ctx.currentPlayer, pawnPosition, parseInt(G.players[ctx.currentPlayer].myCards[cardID].value), home)) {return INVALID_MOVE}
     } else {
         console.log("something went wrong")

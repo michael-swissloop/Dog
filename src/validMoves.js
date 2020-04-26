@@ -92,8 +92,6 @@ export function getPossibleMoves(G, playerID) {
                 for (let k = 0; k < possibleTravel.length; k++) {
                     if (checkForBlock(G, i, j, possibleTravel[k].cardValue)) {
                         possibleMoves.push({"cardIndex": possibleTravel[k].cardIndex, "cardValue": possibleTravel[k].cardValue, "position": [i, j], "home":false})
-
-                    //    TODO: go home possibilities
                         if (
                             checkHomePossible(G, playerID, {"sectionID":i, "positionID":j}, possibleTravel[k].cardValue)
                         ) {
@@ -103,6 +101,24 @@ export function getPossibleMoves(G, playerID) {
                 }
             }
 
+        }
+    }
+
+    for (let i = 0; i < 3; i++) {
+        if (G.winPositions[playerID][i] === playerID) {
+            for (let k = 0; k < possibleTravel.length; k++) {
+                if (possibleTravel[k].cardValue < 4-i && possibleTravel[k].cardValue > 0) {
+                    let maybe = true
+                    for (let j = 0; j < possibleTravel[k].cardValue; j++) {
+                        if (G.winPositions[playerID][i + j + 1] === playerID) {
+                            maybe = false
+                        }
+                    }
+                    if (maybe) {
+                        possibleMoves.push({"cardIndex": possibleTravel[k].cardIndex, "cardValue": possibleTravel[k].cardValue, "position": [playerID, 20+i], "home":true})
+                    }
+                }
+            }
         }
     }
 
@@ -126,7 +142,7 @@ export function checkForPossibleMoves(G, playerID) {
 export function checkForBlock(G, sectionID, positionID, distance) {
     if (distance === null) {return false}
     for (let i = 0; i < distance; i++) {
-        let newPos = [(Math.floor(sectionID+(positionID+i+1)/16))%4, (positionID+i+1)%16]
+        let newPos = [(Math.floor(sectionID+(positionID+i+1)/16))%G.positions.length, (positionID+i+1)%16]
 
         if (newPos[1] === 9 &&
             newPos[0] === G.positions[newPos[0]][newPos[1]] &&
@@ -137,7 +153,7 @@ export function checkForBlock(G, sectionID, positionID, distance) {
     }
     if (distance < 0) {
         for (let i = 0; i < distance; i--) {
-            let newPos = [(Math.floor(sectionID+(positionID+i-1)/16))%4, (positionID+i-1)%16]
+            let newPos = [(Math.floor(sectionID+(positionID+i-1)/16))%G.positions.length, (positionID+i-1)%16]
 
             if (newPos[1] === 9 &&
                 newPos[0] === G.positions[newPos[0]][newPos[1]] &&
@@ -152,8 +168,8 @@ export function checkForBlock(G, sectionID, positionID, distance) {
 }
 
 export function checkSwitchAllowed(G, playerID, pawnPosition1, pawnPosition2) {
-    if (G.positions[pawnPosition1.sectionID][pawnPosition1.positionID] === -1) {return false;}
-    if (G.positions[pawnPosition2.sectionID][pawnPosition2.positionID] === -1) {return false;}
+    if (!(G.positions[pawnPosition1.sectionID][pawnPosition1.positionID] >= 0)) {return false;}
+    if (!(G.positions[pawnPosition2.sectionID][pawnPosition2.positionID] >= 0)) {return false;}
     if (G.positions[pawnPosition1.sectionID][pawnPosition1.positionID] === G.positions[pawnPosition2.sectionID][pawnPosition2.positionID]) {return false;}
     if (pawnPosition1.positionID === 9 &&
         pawnPosition1.sectionID === G.positions[pawnPosition1.sectionID][pawnPosition1.positionID] &&
@@ -165,13 +181,13 @@ export function checkSwitchAllowed(G, playerID, pawnPosition1, pawnPosition2) {
 }
 
 export function checkHomePossible(G, playerID, pawnPosition, distance) {
-    let newPos = [(Math.floor(pawnPosition.sectionID+(pawnPosition.positionID+distance)/16))%4, (pawnPosition.positionID+distance)%16]
+    let newPos = [(Math.floor(pawnPosition.sectionID+(pawnPosition.positionID+distance)/16))%G.positions.length, (pawnPosition.positionID+distance)%16]
     if (newPos[0] !== playerID) {return false}
     if (newPos[1] > 13) {return false}
     if (newPos[1] < 10) {return false}
     if (pawnPosition.sectionID === playerID && pawnPosition.positionID === 9 && !G.allowedHome[playerID]) {return false}
     if (pawnPosition.sectionID === playerID && pawnPosition.positionID > 9) {return false}
-    if (pawnPosition.sectionID === (playerID+1)%4) {return false}
+    if (pawnPosition.sectionID === (playerID+1)%G.positions.length) {return false}
     for (let i = 0; i < newPos[1]-10; i++) {
         if (G.winPositions[playerID][i] !== -1) {return false}
     }

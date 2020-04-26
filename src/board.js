@@ -77,9 +77,13 @@ class Board extends React.Component {
     }
 
     attemptSwitch(sectionID, positionID) {
+        // Check for correct card
         if (this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value !== "J" &&
             this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value !== "Joker") {return false}
-        if (this.props.G.positions[sectionID][positionID] < 0) {return false}
+        // Check if a player is at the selected position
+        if (!(this.props.G.positions[sectionID][positionID] >= 0)) {return false}
+
+        // evaluate first player select
         if (this.switchPosition[0] < 0) {
             console.log("changing switchPosition")
             this.switchPosition = [sectionID, positionID]
@@ -222,6 +226,37 @@ class Board extends React.Component {
             }
             if (positionID - 20 >= 0) {
                 console.log("are we winning?")
+                if (sectionID === this.myPlayerID && this.props.G.winPositions[this.myPlayerID][positionID-20] === this.myPlayerID) {
+                    let selectedCard = this.cardToBePlayed
+                    let possibilities = this.possibleMoves.filter(function(move) {
+                        return move.cardIndex === selectedCard && move.position[0] === sectionID && move.position[1] === positionID;
+                    })
+                    console.log(possibilities)
+                    if (possibilities.length === 1) {
+                        if (this.attemptMove(sectionID, positionID)) {
+                            this.projected = [];
+                            return;
+                        }
+                        else {
+                            console.log("in here 2")
+                            this.projected = []
+                            this.projectedDistance = []
+                            this.intendedPlayer = [sectionID, positionID]
+                            for (let i = 0; i < possibilities.length; i++) {
+                                this.projected.push([sectionID][positionID+possibilities[i].cardValue])
+                                this.projectedDistance.push(possibilities[i].cardValue)
+                            }
+                            this.setState({...this.projected});
+                        }
+                    }
+                }
+                if (this.projectedDistance.length !== 0 && this.projected.some(e => e[0] === sectionID && e[1] === positionID)) {
+                    console.log("mwahahahah")
+                    if (this.attemptMove(this.intendedPlayer[0], this.intendedPlayer[1], this.projectedDistance[this.projected.findIndex(e => e[0] === sectionID && e[1] === positionID)], positionID >= 20)) {
+                        this.projected = [];
+                        return
+                    }
+                }
             }
         }
     }
