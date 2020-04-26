@@ -193,7 +193,7 @@ class Board extends React.Component {
                 console.log(possibilities)
 
                 if (possibilities.length === 1) {
-                    if (this.attemptMove(sectionID, positionID)) {
+                    if (this.attemptMove(sectionID, positionID, possibilities[0].cardValue)) {
                         this.projected = [];
                         return
                     }
@@ -233,28 +233,21 @@ class Board extends React.Component {
                     })
                     console.log(possibilities)
                     if (possibilities.length === 1) {
-                        if (this.attemptMove(sectionID, positionID)) {
+                        if (this.attemptMove(sectionID, positionID, possibilities[0].cardValue)) {
                             this.projected = [];
                             return;
                         }
-                        else {
-                            console.log("in here 2")
-                            this.projected = []
-                            this.projectedDistance = []
-                            this.intendedPlayer = [sectionID, positionID]
-                            for (let i = 0; i < possibilities.length; i++) {
-                                this.projected.push([sectionID][positionID+possibilities[i].cardValue])
-                                this.projectedDistance.push(possibilities[i].cardValue)
-                            }
-                            this.setState({...this.projected});
-                        }
                     }
-                }
-                if (this.projectedDistance.length !== 0 && this.projected.some(e => e[0] === sectionID && e[1] === positionID)) {
-                    console.log("mwahahahah")
-                    if (this.attemptMove(this.intendedPlayer[0], this.intendedPlayer[1], this.projectedDistance[this.projected.findIndex(e => e[0] === sectionID && e[1] === positionID)], positionID >= 20)) {
-                        this.projected = [];
-                        return
+                    else {
+                        console.log("in here 2")
+                        this.projected = []
+                        this.projectedDistance = []
+                        this.intendedPlayer = [sectionID, positionID]
+                        for (let i = 0; i < possibilities.length; i++) {
+                            this.projected.push([sectionID,positionID+possibilities[i].cardValue])
+                            this.projectedDistance.push(possibilities[i].cardValue)
+                        }
+                        this.setState({...this.projected});
                     }
                 }
             }
