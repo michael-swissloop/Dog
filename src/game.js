@@ -4,7 +4,7 @@
 
 import { getNewCardDeck, shuffleDeck } from './cardDeck';
 // import {Game, PlayerView} from "boardgame.io/core";
-import {ActivePlayers, INVALID_MOVE} from "boardgame.io/core";
+import {ActivePlayers, PlayerView, INVALID_MOVE} from "boardgame.io/core";
 import {checkForPossibleMoves, checkForBlock, checkHomePossible} from "./validMoves"
 
 function StartPawn(G, currentPlayer) {
@@ -157,21 +157,21 @@ export function playCard(G, ctx, cardID, pawnPosition, additionalParam, home) {
         return INVALID_MOVE;
     }
     G.centerCard = G.players[ctx.currentPlayer].myCards[cardID];
-    G.secret.spentCards.push(G.players[ctx.currentPlayer].myCards.splice(cardID,1)[0]);
+    G.spentCards.push(G.players[ctx.currentPlayer].myCards.splice(cardID,1)[0]);
 }
 
 export function selectExchange(G, ctx, playerID, cardID) {
-    if (G.secret.newCard[(parseInt(playerID)+2)%ctx.numPlayers] !== null) {
+    if (G.players[parseInt(playerID)].passingCard !== null) {
         return INVALID_MOVE;
     } else {
-        G.secret.newCard[(parseInt(playerID)+2)%ctx.numPlayers] = G.players[playerID].myCards.splice(cardID, 1)[0];
+        G.players[parseInt(playerID)].passingCard = G.players[playerID].myCards.splice(cardID, 1)[0];
     }
 }
 
 export function doNothing(G, ctx) {
     // check if moves can be made, otherwise throw away cards
     if (!checkForPossibleMoves(G, ctx.currentPlayer)) {
-        G.secret.spentCards = G.secret.spentCards.concat(G.players[ctx.currentPlayer].myCards);
+        G.spentCards = G.spentCards.concat(G.players[ctx.currentPlayer].myCards);
         G.players[ctx.currentPlayer].myCards = [];
     }
     if (G.players[ctx.currentPlayer].myCards.length === 0) {
@@ -191,7 +191,7 @@ export function playJackCard(G, ctx, cardID, pawnPosition1, pawnPosition2) {
     ) {
         if (switchPlayers(G, ctx, pawnPosition1, pawnPosition2)) {
             G.centerCard = G.players[ctx.currentPlayer].myCards[cardID];
-            G.secret.spentCards.push(G.players[ctx.currentPlayer].myCards.splice(cardID,1)[0]);
+            G.spentCards.push(G.players[ctx.currentPlayer].myCards.splice(cardID,1)[0]);
             return;
         }
     } else {
@@ -240,7 +240,7 @@ const Dog = {
 
         let players = {}
         for (let i = 0; i < ctx.numPlayers; i++) {
-            players[i] = {myCards:[]}
+            players[i] = {myCards:[], passingCard:null}
         }
 
         return{
@@ -250,16 +250,16 @@ const Dog = {
             blocking: Array(ctx.numPlayers).fill(null).map(()=>(false)),
             allowedHome: Array(ctx.numPlayers).fill(null).map(()=>(false)),
             centerCard: {},
+            spentCards: [],
             secret: {
                 deck: deck,
-                spentCards: [],
-                newCard: {'0':null, '1':null, '2':null,'3':null},
             },
             players: players,
             roundCounter: 0,
         }
         // deck;
     },
+
 
     events: {
         endTurn: true,
@@ -272,8 +272,8 @@ const Dog = {
             next: 'PlayCards',
             onBegin: (G, ctx) => {
                 // Reshuffle complete deck at start of phase
-                G.secret.deck = shuffleDeck(G.secret.deck.concat(G.secret.spentCards))
-                G.secret.spentCards = [];
+                G.secret.deck = shuffleDeck(G.secret.deck.concat(G.spentCards))
+                G.spentCards = [];
 
                 //distribute cards
                 let numCards = 6-(G.roundCounter%5)
@@ -285,9 +285,10 @@ const Dog = {
             },
             onEnd: (G, ctx) => {
                 for (let i = 0; i < ctx.numPlayers; i++) {
-                    G.players[i].myCards.push(G.secret.newCard[i]);
+                    G.players[i].myCards.push(G.players[(i+ctx.numPlayers/2)%ctx.numPlayers].passingCard);
+                    G.players[(i+ctx.numPlayers/2)%ctx.numPlayers].passingCard = null;
                 }
-                G.secret.newCard = {'0':null, '1':null, '2':null,'3':null}
+                // G.secret.newCard = {'0':null, '1':null, '2':null,'3':null}
 
             },
             start: true,
@@ -364,9 +365,9 @@ const Dog = {
     //     playCard,
     // },
 
-    // playerView: (G, ctx, playerID) => {
-    //     return PlayerView.STRIP_SECRETS(G, playerID);
-    // },
+    playerView: (G, ctx, playerID) => {
+        return PlayerView.STRIP_SECRETS(G, ctx, playerID);
+    },
 
     endIf: (G, ctx) => {
         if (isVictory(G.winPositions,ctx.currentPlayer)) {

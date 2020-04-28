@@ -2,13 +2,13 @@ import React from 'react'
 import { Client } from 'boardgame.io/react';
 import Dog from "./game";
 import Board from "./board";
-import { Local } from "boardgame.io/multiplayer"
+import { Local, SocketIO } from "boardgame.io/multiplayer"
 
 const DogClient = Client({
     game: Dog,
     numPlayers: 4,
     board: Board,
-    multiplayer: Local(),
+    multiplayer: SocketIO({ server: 'http://localhost:8000/' }),
     // debug: false,
 });
 

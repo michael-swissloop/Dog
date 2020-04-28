@@ -211,8 +211,7 @@ class Board extends React.Component {
                 } else if (this.props.G.players[this.myPlayerID].myCards[this.cardToBePlayed].value === "J") {
                 // if jack do nothing
                 } else {
-                    // if multiple options show these
-                    // console.log("in here")
+                    // if multiple options possible, show these
                     this.projected = [];
                     this.projectedDistance = [];
                     this.intendedPlayer = [sectionID, positionID]
@@ -227,6 +226,8 @@ class Board extends React.Component {
                     this.setState({...this.projected});
                 }
             }
+
+            // Execute move when selecting an option
             if (this.projectedDistance.length !== 0 && this.projected.some(e => e[0] === sectionID && e[1] === positionID)) {
                 // if (this.attemptMove())
                 // console.log("something")
@@ -236,6 +237,8 @@ class Board extends React.Component {
                     return
                 }
             }
+
+            // Parse moving in final positions, like for normal moves but here due to different board section
             if (positionID - 20 >= 0) {
                 // console.log("are we winning?")
                 if (sectionID === this.myPlayerID && this.props.G.winPositions[this.myPlayerID][positionID-20] === this.myPlayerID) {
@@ -267,6 +270,8 @@ class Board extends React.Component {
     }
 
     getBoardSection(playerID, screenPos, orientation) {
+        // Draw a section of the gameboard
+
         const items = []
 
         // Draw main path
@@ -361,7 +366,7 @@ class Board extends React.Component {
         }
 
         if (this.props.ctx.phase === "ExchangeCards") {
-            if (this.props.G.secret.newCard[(this.myPlayerID+(this.props.ctx.numPlayers/2))%this.props.ctx.numPlayers] === null) {
+            if (this.props.G.players[this.myPlayerID].passingCard === null) {
                 this.instructions = "Select Card to Exchange";
             } else {
                 this.instructions = "Please wait for other Players"
